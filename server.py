@@ -3,10 +3,14 @@ from TTS.api import TTS
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.responses import FileResponse
+import uvicorn
+from loguru import logger
+from argparse import ArgumentParser
 
 app = FastAPI()
 
 # Load model once at server startup
+logger.info("Model initialization.")
 device = "cuda" if torch.cuda.is_available() else "cpu"
 tts_model = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
 
@@ -43,9 +47,9 @@ class SynthesisFileRequest(BaseModel):
     text: str
     speaker_wav: str
     language: str
-    file_path: str # The user specifies the path to save the file
+    output_path: str # The user specifies the path to save the file
 
-@app.post("/synthesize_to_audio/")
+@app.post("/tts_to_audio/")
 def synthesize_to_audio(request: SynthesisRequest):
     try:
         # Generating a temporary file to be transferred to the user.
@@ -54,13 +58,13 @@ def synthesize_to_audio(request: SynthesisRequest):
             text=request.text,
             speaker_wav=request.speaker_wav,
             language=request.language,
-            file_path=temporary_file_path
+            output_path=temporary_file_path
         )
         return FileResponse(path=temporary_file_path, media_type='audio/wav', filename="output.wav")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/synthesize_to_file/")
+@app.post("/tts_to_file/")
 def synthesize_to_file(request: SynthesisFileRequest):
     try:
         tts_model.tts_to_file(
@@ -74,5 +78,11 @@ def synthesize_to_file(request: SynthesisFileRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    parser = ArgumentParser(description="Run the Uvicorn server.")
+    parser.add_argument("-hs", "--host", default="0.0.0.0", help="Host to bind")
+    parser.add_argument("-p", "--port", default=8020, type=int, help="Port to bind")
+
+    args = parser.parse_args()
+
+    logger.info("Server ready.")
+    uvicorn.run(app, host=args.host, port=args.port)
