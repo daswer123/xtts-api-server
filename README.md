@@ -1,39 +1,43 @@
 # A simple FastAPI Server to run XTTSv2
 
-The project is inspired by [silero-api-server](https://github.com/ouoertheo/silero-api-server)
-repo uses [XTTSv2](https://github.com/coqui-ai/TTS)
+This project is inspired by [silero-api-server](https://github.com/ouoertheo/silero-api-server) and utilizes [XTTSv2](https://github.com/coqui-ai/TTS).
 
-Created a PR for SillyTavern: [here](https://github.com/SillyTavern/SillyTavern/pull/1383)
+I created a Pull Request that has been merged into the dev branch of SillyTavern: [here](https://github.com/SillyTavern/SillyTavern/pull/1383).
 
-The TTS module or server can be used any way you wish.
+The TTS module or server can be used in any way you prefer.
 
 ## Installation
 
-`pip install xtts-api-server`
+To begin, install the `xtts-api-server` package using pip:
 
-I strongly recommend installing pytorch with CUDA so that the entire process is on the video card
+```bash
+pip install xtts-api-server
+```
 
-`pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118`
+I strongly recommend installing PyTorch with CUDA support to leverage the processing power of your video card, which will enhance the speed of the entire process:
+
+```bash
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
 
 ## Starting Server
 
-`python -m xtts_api_server` will run on default ip and port (0.0.0.0:8020)
+`python -m xtts_api_server` will run on default ip and port (localhost:8020)
 
 ```
-usage: xtts-api-server [-h] [-o HOST] [-p PORT] [-sf SPEAKER_FOLDER] [-o OUTPUT]
+usage: xtts_api_server [-h] [-hs HOST] [-p PORT] [-sf SPEAKER_FOLDER] [-o OUTPUT]
 
 Run XTTSv2 within a FastAPI application
 
 options:
-  -h, --help            show this help message and exit
-  -o HOST, --host HOST
+  -h, --help show this help message and exit
+  -hs HOST, --host HOST
   -p PORT, --port PORT
   -sf SPEAKER_FOLDER, --speaker_folder The folder where you get the samples for tts
   -o OUTPUT, --output Output folder
 ```
 
 The first time you run or generate, you may need to confirm that you agree to use XTTS.
-The model will be loaded into memory after the first generation.
 
 # API Docs
 
