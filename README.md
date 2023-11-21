@@ -32,7 +32,7 @@ The first time you run or generate, you may need to confirm that you agree to us
 The model will be loaded into memory after the first generation.
 
 # API Docs
-API Docs can be accessed from [http://localhost:8001/docs](http://localhost:8001/docs)
+API Docs can be accessed from [http://localhost:8020/docs](http://localhost:8020/docs)
 
 # Voice Samples
 You can find the sample in this repository, also by default samples will be saved to `/output/output.wav` or you can change this, more details in the API documentation
