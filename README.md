@@ -17,7 +17,7 @@ I strongly recommend installing pytorch with CUDA so that the entire process is 
 
 ## Starting Server
 
-`python -m xtts-api-server` will run on default ip and port (0.0.0.0:8020)
+`python -m xtts_api_server` will run on default ip and port (0.0.0.0:8020)
 
 ```
 usage: xtts-api-server [-h] [-o HOST] [-p PORT] [-sf SPEAKER_FOLDER] [-o OUTPUT]
