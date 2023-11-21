@@ -4,6 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "xtts-api-server"
+version = "0.1.0"
 authors = [
   { name="daswer123", email="daswerq123@gmail.com" },
 ]
@@ -25,14 +26,10 @@ dependencies = [
   "uvicorn",
   "tts"
 ]
-dynamic=["version"]
 
 [project.urls]
-"Homepage" = "https://github.com/daswer123/xttsv2-api-server"
+Homepage = "https://github.com/daswer123/xttsv2-api-server"
 "Bug Tracker" = "https://github.com/daswer123/xttsv2-api-server/issues"
 
-[tool.hatch.version]
-source = "vcs"
-
 [tool.hatch.build.targets.wheel]
-only-include = ["xtts_api_server"]
+only-include=["xtts_api_server"]
