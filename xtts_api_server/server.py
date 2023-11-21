@@ -17,6 +17,7 @@ from xtts_api_server.tts_funcs import TTSWrapper,supported_languages
 # Default Folders , you can change them via API
 OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
 SPEAKER_FOLDER = os.getenv('SPEAKER', 'speakers')
+BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
 
 # Create an instance of the TTSWrapper class and server
 app = FastAPI()
@@ -49,10 +50,15 @@ class SynthesisFileRequest(BaseModel):
     language: str
     file_name_or_path: str  
 
-@app.get("/speakers/")
+@app.get("/speakers_default/")
 def get_speakers():
     speakers = XTTS.get_speakers()
-    return {"speakers": speakers}
+    return speakers
+
+@app.get("/speakers/")
+def get_speakers():
+    speakers = XTTS.get_speakers_special()
+    return speakers
 
 @app.get("/languages/")
 def get_languages():
@@ -64,6 +70,14 @@ def get_folders():
     speaker_folder = XTTS.speaker_folder
     output_folder = XTTS.output_folder
     return {"speaker_folder": speaker_folder, "output_folder": output_folder}
+
+@app.get("/sample/{file_name}")
+def get_sample(file_name: str):
+    file_path = os.path.join(XTTS.speaker_folder, file_name)
+    if os.path.isfile(file_path):
+        return FileResponse(file_path, media_type="audio/wav")
+    else:
+        raise HTTPException(status_code=404, detail="File not found")
 
 @app.post("/set_output/")
 def set_output(output_req: OutputFolderRequest):

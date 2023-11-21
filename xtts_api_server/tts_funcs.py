@@ -80,6 +80,22 @@ class TTSWrapper:
         speakers_list = [os.path.splitext(f)[0] for f in os.listdir(self.speaker_folder) if f.endswith('.wav')]
         return speakers_list
     
+    def get_speakers_special(self):
+        speakers_list = []
+        BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
+
+        for file in os.listdir(self.speaker_folder):
+            if file.endswith('.wav'):
+                speaker_name = os.path.splitext(file)[0]
+                preview_url = f"{BASE_URL}/sample/{file}"
+                speaker = {
+                    'name': speaker_name,
+                    'voice_id': speaker_name,
+                    'preview_url': preview_url
+                }
+                speakers_list.append(speaker)
+        return speakers_list
+    
     def list_languages(self):
         return reversed_supported_languages
 
