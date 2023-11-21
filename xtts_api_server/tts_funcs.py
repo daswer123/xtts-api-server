@@ -30,11 +30,14 @@ reversed_supported_languages = {name: code for code, name in supported_languages
 class TTSWrapper:
     def __init__(self,output_folder = "./output", speaker_folder="./speakers"):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(self.device)
+        # self.model = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(self.device)
         self.speaker_folder = speaker_folder
         self.output_folder = output_folder
 
         self.create_directories()
+    
+    def load_model(self):
+        self.model = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(self.device)
 
     def create_directories(self):
         # A list of all mystical places to be checked or conjured.
@@ -55,7 +58,7 @@ class TTSWrapper:
     def set_speaker_folder(self, folder):
         if os.path.exists(folder) and os.path.isdir(folder):
             self.speaker_folder = folder
-            create_directories(self)
+            self.create_directories()
             logger.info(f"Speaker folder is set to {folder}")
         else:
             raise ValueError("Provided path is not a valid directory")
@@ -63,7 +66,7 @@ class TTSWrapper:
     def set_out_folder(self, folder):
         if os.path.exists(folder) and os.path.isdir(folder):
             self.output_folder = folder
-            create_directories(self)
+            self.create_directories()
             logger.info(f"Output folder is set to {folder}")
         else:
             raise ValueError("Provided path is not a valid directory")
@@ -82,6 +85,9 @@ class TTSWrapper:
 
     def process_tts_to_file(self, text, speaker_name_or_path, language, file_name_or_path="out.wav"):
         try:
+            # Load the model if it's not already loaded
+            if not hasattr(self, "model"):
+                self.load_model()
             # Check if the speaker path is a .wav file or just the name
             if speaker_name_or_path.endswith('.wav'):
                 if os.path.isabs(speaker_name_or_path):

@@ -7,19 +7,20 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import uvicorn
 
+import os
 import shutil
 from loguru import logger
 from argparse import ArgumentParser
 
-from tts_funcs import TTSWrapper
+from xtts_api_server.tts_funcs import TTSWrapper,supported_languages
 
 # Default Folders , you can change them via API
-OUTPUT_FOLDER = "output"
-SPEAKER_FOLDER = "speakers"
+OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
+SPEAKER_FOLDER = os.getenv('SPEAKER', 'speakers')
 
 # Create an instance of the TTSWrapper class and server
 app = FastAPI()
-XTTS = TTSWrapper()
+XTTS = TTSWrapper(OUTPUT_FOLDER,SPEAKER_FOLDER)
 
 # Add CORS middleware 
 origins = ["*"]
@@ -46,7 +47,7 @@ class SynthesisFileRequest(BaseModel):
     text: str
     speaker_wav: str 
     language: str
-    output_path: str  
+    file_name_or_path: str  
 
 @app.get("/speakers/")
 def get_speakers():
@@ -92,8 +93,7 @@ async def tts_to_audio(request: SynthesisRequest):
         output_file_path = XTTS.process_tts_to_file(
             text=request.text,
             speaker_name_or_path=request.speaker_wav,
-            language=request.language.lower(),
-            file_name_or_path=None  # Generate a unique temp filename within the method.
+            language=request.language.lower()
         )
 
         def iterfile():
@@ -126,7 +126,7 @@ async def tts_to_file(request: SynthesisFileRequest):
             text=request.text,
             speaker_name_or_path=request.speaker_wav,
             language=request.language.lower(),
-            file_name_or_path=request.file_path  # The user-provided path to save the file is used here.
+            file_name_or_path=request.file_name_or_path  # The user-provided path to save the file is used here.
         )
         return {"message": "The scroll of sound has been sealed and saved.", "output_path": output_file}
 
@@ -134,11 +134,4 @@ async def tts_to_file(request: SynthesisFileRequest):
          raise HTTPException(status_code=500, detail=f"A sinister fault has slipped through: {str(e)}")
 
 if __name__ == "__main__":
-    parser = ArgumentParser(description="Run the Uvicorn server.")
-    parser.add_argument("-hs", "--host", default="0.0.0.0", help="Host to bind")
-    parser.add_argument("-p", "--port", default=8020, type=int, help="Port to bind")
-
-    args = parser.parse_args()
-    logger.info("Starting server...")
-
-    uvicorn.run(app, host=args.host, port=args.port)
+    uvicorn.run(app,host="0.0.0.0",port=8001)

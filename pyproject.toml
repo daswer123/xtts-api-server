@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling","hatch-vcs"]
+build-backend = "hatchling.build"
+
+[project]
+name = "xtts-api-server"
+authors = [
+  { name="daswer123", email="daswerq123@gmail.com" },
+]
+description = "A simple FastAPI server to host XTTSv2"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+  "fastapi",
+  "loguru",
+  "pydantic",
+  "python-dotenv",
+  "torch",
+  "torchaudio",
+  "uvicorn",
+  "tts"
+]
+dynamic=["version"]
+
+[project.urls]
+"Homepage" = "https://github.com/daswer123/xttsv2-api-server"
+"Bug Tracker" = "https://github.com/daswer123/xttsv2-api-server/issues"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["xtts_api_server"]
