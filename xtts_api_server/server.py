@@ -23,6 +23,10 @@ BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
 app = FastAPI()
 XTTS = TTSWrapper(OUTPUT_FOLDER,SPEAKER_FOLDER)
 
+# Load model
+logger.info("The model starts to load, wait about a minute")
+XTTS.load_model() 
+
 # Add CORS middleware 
 origins = ["*"]
 app.add_middleware(

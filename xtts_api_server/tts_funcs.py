@@ -35,6 +35,7 @@ class TTSWrapper:
         self.output_folder = output_folder
 
         self.create_directories()
+        # self.load_model()
     
     def load_model(self):
         self.model = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(self.device)
@@ -101,9 +102,6 @@ class TTSWrapper:
 
     def process_tts_to_file(self, text, speaker_name_or_path, language, file_name_or_path="out.wav"):
         try:
-            # Load the model if it's not already loaded
-            if not hasattr(self, "model"):
-                self.load_model()
             # Check if the speaker path is a .wav file or just the name
             if speaker_name_or_path.endswith('.wav'):
                 if os.path.isabs(speaker_name_or_path):
