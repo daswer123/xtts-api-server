@@ -4,6 +4,7 @@ The project is inspired by [silero-api-server](https://github.com/ouoertheo/sile
 repo uses [XTTSv2](https://github.com/coqui-ai/TTS)
 
 TODO: This is will be to serve the TTS extension in [SillyTavern](https://github.com/Cohee1207/SillyTavern) soon. The TTS module or server can be used any way you wish.
+UPD: There's already a result
 
 ## Installation
 `pip install xtts-api-server`
