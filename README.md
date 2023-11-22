@@ -55,7 +55,7 @@ You can change the folders for speakers and the folder for output via the API.
 
 Once you have at least one file in your speakers folder, you can get its name via API and then you only need to specify the file name.
 
-# Note about cloning samples
+# Note on creating samples for quality voice cloning
 
 The following post is a quote by user [Material1276 from reddit](https://www.reddit.com/r/Oobabooga/comments/1807tsl/comment/ka5l8w9/?share_id=_5hh4KJTXrEOSP0hR0hCK&utm_content=2&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=1)
 
