@@ -76,5 +76,3 @@ The following post is a quote by user [Material1276 from reddit](https://www.red
 > - Make sure the clip doesn't start or end with breathy sounds (breathing in/out etc).
 >
 > Using AI generated audio clips may introduce unwanted sounds as its already a copy/simulation of a voice, though, this would need testing.
->
-> Here's an Emma Watson voice sample I created from an interview of hers, using the above method (https://easyupload.io/u0b7d5)[https://easyupload.io/u0b7d5] It mostly produces a nice clean English accent. Here's an example of the output I get from that [https://easyupload.io/jowqjl](https://easyupload.io/jowqjl)
