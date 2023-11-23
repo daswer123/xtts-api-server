@@ -81,11 +81,18 @@ class TTSWrapper:
     def get_speakers_special(self):
         speakers_list = []
         BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
+        TUNNEL_URL = os.getenv('TUNNEL_URL', '')
 
+        preview_url = "" 
         for file in os.listdir(self.speaker_folder):
+            
+            if TUNNEL_URL == "":
+                preview_url = f"{BASE_URL}/sample/{file}"
+            else:
+                preview_url = f"{TUNNEL_URL}/sample/{file}"
+
             if file.endswith('.wav'):
                 speaker_name = os.path.splitext(file)[0]
-                preview_url = f"{BASE_URL}/sample/{file}"
                 speaker = {
                     'name': speaker_name,
                     'voice_id': speaker_name,
