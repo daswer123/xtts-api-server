@@ -2,7 +2,6 @@ from TTS.api import TTS
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from fastapi.responses import StreamingResponse
 
 from pydantic import BaseModel
 import uvicorn
@@ -24,7 +23,7 @@ app = FastAPI()
 XTTS = TTSWrapper(OUTPUT_FOLDER,SPEAKER_FOLDER)
 
 # Load model
-logger.info("The model starts to load, wait about a minute")
+logger.info("The model starts to load,wait until it loads")
 XTTS.load_model() 
 
 # Add CORS middleware 
@@ -81,6 +80,7 @@ def get_sample(file_name: str):
     if os.path.isfile(file_path):
         return FileResponse(file_path, media_type="audio/wav")
     else:
+        logger.error("File not found")
         raise HTTPException(status_code=404, detail="File not found")
 
 @app.post("/set_output/")
@@ -89,6 +89,7 @@ def set_output(output_req: OutputFolderRequest):
         XTTS.set_out_folder(output_req.output_folder)
         return {"message": f"Output folder set to {output_req.output_folder}"}
     except ValueError as e:
+        logger.error(e)
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/set_speaker_folder/")
@@ -97,6 +98,7 @@ def set_speaker_folder(speaker_req: SpeakerFolderRequest):
         XTTS.set_speaker_folder(speaker_req.speaker_folder)
         return {"message": f"Speaker folder set to {speaker_req.speaker_folder}"}
     except ValueError as e:
+        logger.error(e)
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/tts_to_audio/")
@@ -114,19 +116,16 @@ async def tts_to_audio(request: SynthesisRequest):
             language=request.language.lower()
         )
 
-        def iterfile():
-            with open(output_file_path, mode="rb") as file_like:  # read the file as stream
-                yield from file_like
-
-        response = StreamingResponse(iterfile(), media_type='audio/wav')
-
-        # Set content disposition header to prompt download with proper filename
-        response.headers["Content-Disposition"] = "attachment; filename=output.wav"
-
-        return response
+        # Return the file in the response
+        return FileResponse(
+            path=output_file_path,
+            media_type='audio/wav',
+            filename="output.wav",
+            )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"An eldritch error has occurred: {str(e)}")
+        logger.error(e)
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 
 @app.post("/tts_to_file/")
@@ -146,10 +145,11 @@ async def tts_to_file(request: SynthesisFileRequest):
             language=request.language.lower(),
             file_name_or_path=request.file_name_or_path  # The user-provided path to save the file is used here.
         )
-        return {"message": "The scroll of sound has been sealed and saved.", "output_path": output_file}
+        return {"message": "The audio was successfully made and stored.", "output_path": output_file}
 
     except Exception as e:
-         raise HTTPException(status_code=500, detail=f"A sinister fault has slipped through: {str(e)}")
+        logger.error(e)
+        raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 if __name__ == "__main__":
-    uvicorn.run(app,host="0.0.0.0",port=8001)
+    uvicorn.run(app,host="0.0.0.0",port=8002)

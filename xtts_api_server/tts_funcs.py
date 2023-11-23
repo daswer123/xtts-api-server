@@ -45,16 +45,13 @@ class TTSWrapper:
         directories = [self.output_folder, self.speaker_folder]
 
         for sanctuary in directories:
-            # Ensure the path is absolute and normalized to prevent any sorcery!
+            # List of folders to be checked for existence
             absolute_path = os.path.abspath(os.path.normpath(sanctuary))
 
             if not os.path.exists(absolute_path):
-                # If it does not exist in this dimension, then we must bring it into being!
+                # If the folder does not exist, create it
                 os.makedirs(absolute_path)
-                print(f"The sacred space at {absolute_path} has been manifested!")
-            else:
-                # If it exists already, let us acknowledge its ancient presence.
-                print(f"The venerable domain at {absolute_path} stands firm.")
+                print(f"Folder in the path {absolute_path} has been created")
 
     def set_speaker_folder(self, folder):
         if os.path.exists(folder) and os.path.isdir(folder):
@@ -80,7 +77,7 @@ class TTSWrapper:
         # Use os.path.splitext to split off the extension and take only the name
         speakers_list = [os.path.splitext(f)[0] for f in os.listdir(self.speaker_folder) if f.endswith('.wav')]
         return speakers_list
-    
+    # Special format for SillyTavern
     def get_speakers_special(self):
         speakers_list = []
         BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
