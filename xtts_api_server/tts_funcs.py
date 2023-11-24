@@ -22,7 +22,8 @@ supported_languages = {
     "tr":"Turkish",
     "ja":"Japanese",
     "ko":"Korean",
-    "hu":"Hungarian"
+    "hu":"Hungarian",
+    "hi":"Hindi"
 }
 
 reversed_supported_languages = {name: code for code, name in supported_languages.items()}
