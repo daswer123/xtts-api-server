@@ -41,6 +41,10 @@ options:
   -t TUNNEL_URL, --tunnel URL of tunnel used (e.g: ngrok, localtunnel)
 ```
 
+If you want your host to listen, use -hs 0.0.0.0
+
+The -t or --tunnel flag is needed so that when you get speakers via get you get the correct link to hear the preview. More info [here](https://imgur.com/a/MvpFT59)
+
 The first time you run or generate, you may need to confirm that you agree to use XTTS.
 
 # API Docs
