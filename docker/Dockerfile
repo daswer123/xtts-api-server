@@ -13,8 +13,11 @@ RUN --mount=type=cache,target=/root/.cache/pip,rw \
     pip3 install torch torchvision torchaudio xformers --index-url https://download.pytorch.org/whl/cu121 && \
     pip3 install xtts-api-server 
 
-ENV CLI_ARGS=""
+ENV CLI_ARGS=${CLI_ARGS:-"-sf /app/example -t http://192.168.88.253:8020"}
+
+RUN mkdir /app
+WORKDIR /app
+ADD example/ /app/example
 
 EXPOSE ${CONTAINER_PORT:-8020} ${CONTAINER_API_PORT:-8020}
-CMD python3 -m xtts_api_server -hs 0.0.0.0 ${CLI_ARGS}
-
+CMD echo "y" | python3 -m xtts_api_server -hs 0.0.0.0 ${CLI_ARGS} 

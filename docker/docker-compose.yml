@@ -4,7 +4,9 @@ services:
   xttsapiserver:
     image: xttsapiserver
     build:
-      context: .
-      dockerfile: ./Dockerfile
+      context: ..
+      dockerfile: ./docker/Dockerfile
     ports:
       - "8020:8020"
+    volumes:
+      - ./tts-models:/root/.local/share/tts:rw
