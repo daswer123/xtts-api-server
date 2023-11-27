@@ -17,7 +17,7 @@ from xtts_api_server.tts_funcs import TTSWrapper,supported_languages
 OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
 SPEAKER_FOLDER = os.getenv('SPEAKER', 'speakers')
 BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
-MODEL_SOURCE = os.getenv("MODEL_SOURCE", "local")
+MODEL_SOURCE = os.getenv("MODEL_SOURCE", "apiManual")
 
 # Create an instance of the TTSWrapper class and server
 app = FastAPI()

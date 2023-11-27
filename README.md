@@ -39,13 +39,18 @@ options:
   -sf SPEAKER_FOLDER, --speaker_folder The folder where you get the samples for tts
   -o OUTPUT, --output Output folder
   -t TUNNEL_URL, --tunnel URL of tunnel used (e.g: ngrok, localtunnel)
-  -ms MODEL_SOURCE, --model-source ["api","local"]
-                        Define the model source: 'api' to download the latest version from the repository; 'local' uses a local copy of version 2.0.2 by default.
+  -ms MODEL_SOURCE, --model-source ["api","apiManual","local"]
 ```
 
 If you want your host to listen, use -hs 0.0.0.0
 
 The -t or --tunnel flag is needed so that when you get speakers via get you get the correct link to hear the preview. More info [here](https://imgur.com/a/MvpFT59)
+
+Model-source defines in which format you want to use xtts:
+
+1. `local` - loads a version 2.0.2 model into the models folder and uses `XttsConfig` and `inference`.
+2. `apiManual` - loads a version 2.0.2 model into the models folder and uses the `tts_to_file` function from the TTS api
+3. `api` - will load the latest version of the model..
 
 The first time you run or generate, you may need to confirm that you agree to use XTTS.
 

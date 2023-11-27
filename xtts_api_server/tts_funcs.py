@@ -53,11 +53,23 @@ class TTSWrapper:
     
     def load_model(self):
         if self.model_source == "api":
-          self.model = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(self.device)
-        else:
+            self.model = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
+
+        if self.model_source == "apiManual":
+            this_dir = Path(__file__).parent.resolve()
+            download_model(this_dir)
+
+            this_dir = Path(__file__).parent.resolve()
+            config_path = this_dir / 'models' / 'xttsv2_2.0.2' / 'config.json'
+            checkpoint_dir = this_dir / 'models' / 'xttsv2_2.0.2'
+
+            self.model = TTS(model_path=checkpoint_dir,config_path=config_path).to(self.device)
+
+        if self.model_source == "local":
           self.load_local_model()
           logger.info("Pre-create latents for all current speakers")
           self.create_latents_for_all()
+          
         logger.info("Model successfully loaded ")
     
     def load_local_model(self):
@@ -164,7 +176,7 @@ class TTSWrapper:
             language,
             gpt_cond_latent=gpt_cond_latent,
             speaker_embedding=speaker_embedding,
-            temperature=0.75,
+            temperature=0.7,
             enable_text_splitting=True  
         )
 
