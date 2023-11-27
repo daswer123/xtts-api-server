@@ -20,7 +20,7 @@ pip install xtts-api-server
 I strongly recommend installing PyTorch with CUDA support to leverage the processing power of your video card, which will enhance the speed of the entire process:
 
 ```bash
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install torch==2.1.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu118
 ```
 
 ## Starting Server
