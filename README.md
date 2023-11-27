@@ -86,7 +86,3 @@ The following post is a quote by user [Material1276 from reddit](https://www.red
 > Make sure the clip doesn't start or end with breathy sounds (breathing in/out etc).
 >
 > Using AI generated audio clips may introduce unwanted sounds as its already a copy/simulation of a voice, though, this would need testing.
->
-> Make sure the clip doesn't start or end with breathy sounds (breathing in/out etc).
->
-> Using AI generated audio clips may introduce unwanted sounds as its already a copy/simulation of a voice, though, this would need testing.
