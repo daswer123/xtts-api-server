@@ -10,12 +10,14 @@ RUN --mount=type=cache,target=/root/.cache/pip,rw pip3 install virtualenv
 
 RUN --mount=type=cache,target=/root/.cache/pip,rw \
     pip3 install --upgrade pip setuptools wheel ninja && \
-    pip3 install torch torchvision torchaudio xformers --index-url https://download.pytorch.org/whl/cu121 && \
-    pip3 install xtts-api-server 
+    pip3 install torch torchvision torchaudio xformers --index-url https://download.pytorch.org/whl/cu121 
 
 RUN mkdir /app
 WORKDIR /app
-ADD example/ /app/example
+ADD . /app
+
+RUN --mount=type=cache,target=/root/.cache/pip,rw \ 
+    pip3 install /app 
 
 EXPOSE ${CONTAINER_PORT:-8020} ${CONTAINER_API_PORT:-8020}
 # echo 'y' is to accept coqui tts model download terms
