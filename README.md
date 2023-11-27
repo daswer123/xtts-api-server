@@ -28,7 +28,7 @@ pip install torch==2.1.0 torchaudio==2.1.0 --index-url https://download.pytorch.
 `python -m xtts_api_server` will run on default ip and port (localhost:8020)
 
 ```
-usage: xtts_api_server [-h] [-hs HOST] [-p PORT] [-sf SPEAKER_FOLDER] [-o OUTPUT] [-t TUNNEL_URL] [-ms MODEL_SOURCE]
+usage: xtts_api_server [-h] [-hs HOST] [-p PORT] [-sf SPEAKER_FOLDER] [-o OUTPUT] [-t TUNNEL_URL] [-ms MODEL_SOURCE] [--lowvram]
 
 Run XTTSv2 within a FastAPI application
 
@@ -40,6 +40,7 @@ options:
   -o OUTPUT, --output Output folder
   -t TUNNEL_URL, --tunnel URL of tunnel used (e.g: ngrok, localtunnel)
   -ms MODEL_SOURCE, --model-source ["api","apiManual","local"]
+  --lowvram The mode in which the model will be stored in RAM and when the processing will move to VRAM, the difference in speed is small
 ```
 
 If you want your host to listen, use -hs 0.0.0.0

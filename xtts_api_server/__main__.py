@@ -10,6 +10,7 @@ parser.add_argument("-o", "--output", default="output/", type=str, help="Output 
 parser.add_argument("-t", "--tunnel", default="", type=str, help="URL of tunnel used (e.g: ngrok, localtunnel)")
 parser.add_argument("-ms", "--model-source", default="apiManual", choices=["api","apiManual", "local"],
                     help="Define the model source: 'api' for latest version from repository, apiManual for 2.0.2 model and api inference or 'local' for using local inference and model v2.0.2.")
+parser.add_argument("--lowvram", action='store_true', help="Enable low vram mode which switches the model to RAM when not actively processing.")
 args = parser.parse_args()
 
 os.environ['OUTPUT'] = args.output  # Set environment variable for output folder.
@@ -17,6 +18,7 @@ os.environ['SPEAKER'] = args.speaker_folder  # Set environment variable for spea
 os.environ['BASE_URL'] = "http://" + args.host + ":" + str(args.port)  # Set environment variable for base url."
 os.environ['TUNNEL_URL'] = args.tunnel  # it is necessary to correctly return correct previews in list of speakers
 os.environ['MODEL_SOURCE'] = args.model_source  # Set environment variable for the model source
+os.environ["LOWVRAM_MODE"] = str(args.lowvram).lower() # Set lowvram mode
 
 from xtts_api_server.server import app
 

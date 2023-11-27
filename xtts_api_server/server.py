@@ -18,10 +18,11 @@ OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
 SPEAKER_FOLDER = os.getenv('SPEAKER', 'speakers')
 BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
 MODEL_SOURCE = os.getenv("MODEL_SOURCE", "apiManual")
+LOWVRAM_MODE = os.getenv("LOWVRAM_MODE") == 'true'
 
 # Create an instance of the TTSWrapper class and server
 app = FastAPI()
-XTTS = TTSWrapper(MODEL_SOURCE,OUTPUT_FOLDER,SPEAKER_FOLDER)
+XTTS = TTSWrapper(LOWVRAM_MODE,MODEL_SOURCE,OUTPUT_FOLDER,SPEAKER_FOLDER)
 
 # Load model
 logger.info("The model starts to load,wait until it loads")

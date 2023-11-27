@@ -39,8 +39,11 @@ supported_languages = {
 reversed_supported_languages = {name: code for code, name in supported_languages.items()}
 
 class TTSWrapper:
-    def __init__(self,model_source = "local",output_folder = "./output", speaker_folder="./speakers"):
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+    def __init__(self,lowvram = False,model_source = "local",output_folder = "./output", speaker_folder="./speakers"):
+
+        self.device = 'cpu' if lowvram else ("cuda" if torch.cuda.is_available() else "cpu")
+        self.lowvram = lowvram  # Store whether we want to run in low VRAM mode.
+
         self.latents_cache = {} 
 
         self.model_source = model_source
@@ -49,7 +52,6 @@ class TTSWrapper:
 
         self.create_directories()
         check_tts_version()
-        # self.load_model()
     
     def load_model(self):
         if self.model_source == "api":
@@ -67,8 +69,10 @@ class TTSWrapper:
 
         if self.model_source == "local":
           self.load_local_model()
-          logger.info("Pre-create latents for all current speakers")
-          self.create_latents_for_all()
+          if self.lowvram == False:
+            # Due to the fact that we create latents on the cpu and load them from the cuda we get an error
+            logger.info("Pre-create latents for all current speakers")
+            self.create_latents_for_all() 
           
         logger.info("Model successfully loaded ")
     
@@ -84,6 +88,16 @@ class TTSWrapper:
         self.model = Xtts.init_from_config(config)
         self.model.load_checkpoint(config, checkpoint_dir=str(checkpoint_dir))
         self.model.to(self.device)
+
+    def switch_model_device(self):
+        if self.lowvram and torch.cuda.is_available():
+            if self.device == 'cuda':
+                self.device = "cpu"
+                self.model.to(self.device)
+                torch.cuda.empty_cache()
+            else:
+                self.device = "cuda"
+                self.model.to(self.device)
 
     def get_or_create_latents(self, speaker_wav):
         if speaker_wav not in self.latents_cache:
@@ -224,12 +238,15 @@ class TTSWrapper:
             # Replace double quotes with single, asterisks, carriage returns, and line feeds
             text = text.replace('"', "'").replace(".'", "'.").replace('*', '').replace('\r', '').replace('\n', '')
 
+            self.switch_model_device() # Load to CUDA if lowram ON
+
             # Define generation if model via api or locally
             if self.model_source == "local":
                 self.local_generation(text,speaker_wav,language,output_file)
             else:
                 self.api_generation(text,speaker_wav,language,output_file)
-
+            
+            self.switch_model_device() # Unload to CPU if lowram ON
             return output_file
 
         except Exception as e:
