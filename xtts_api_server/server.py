@@ -17,10 +17,11 @@ from xtts_api_server.tts_funcs import TTSWrapper,supported_languages
 OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
 SPEAKER_FOLDER = os.getenv('SPEAKER', 'speakers')
 BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
+MODEL_SOURCE = os.getenv("MODEL_SOURCE", "local")
 
 # Create an instance of the TTSWrapper class and server
 app = FastAPI()
-XTTS = TTSWrapper(OUTPUT_FOLDER,SPEAKER_FOLDER)
+XTTS = TTSWrapper(MODEL_SOURCE,OUTPUT_FOLDER,SPEAKER_FOLDER)
 
 # Load model
 logger.info("The model starts to load,wait until it loads")
@@ -53,7 +54,7 @@ class SynthesisFileRequest(BaseModel):
     language: str
     file_name_or_path: str  
 
-@app.get("/speakers_default")
+@app.get("/speakers_list")
 def get_speakers():
     speakers = XTTS.get_speakers()
     return speakers
@@ -104,6 +105,9 @@ def set_speaker_folder(speaker_req: SpeakerFolderRequest):
 @app.post("/tts_to_audio/")
 async def tts_to_audio(request: SynthesisRequest):
     try:
+        if XTTS.model_source == "local":
+          logger.info(f"Processing TTS to audio with request: {request}")
+          
         # Validate language code against supported languages.
         if request.language.lower() not in supported_languages:
             raise HTTPException(status_code=400,
@@ -131,7 +135,8 @@ async def tts_to_audio(request: SynthesisRequest):
 @app.post("/tts_to_file")
 async def tts_to_file(request: SynthesisFileRequest):
     try:
-        logger.info(f"Processing TTS to file with request: {request}")
+        if XTTS.model_source == "local":
+          logger.info(f"Processing TTS to file with request: {request}")
 
         # Validate language code against supported languages.
         if request.language.lower() not in supported_languages:
