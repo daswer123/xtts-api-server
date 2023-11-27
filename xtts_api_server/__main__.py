@@ -8,8 +8,8 @@ parser.add_argument("-p", "--port", default=8020, type=int, help="Port to bind")
 parser.add_argument("-sf", "--speaker_folder", default="speakers/", type=str, help="The folder where you get the samples for tts")
 parser.add_argument("-o", "--output", default="output/", type=str, help="Output folder")
 parser.add_argument("-t", "--tunnel", default="", type=str, help="URL of tunnel used (e.g: ngrok, localtunnel)")
-parser.add_argument("-ms", "--model-source", default="local", choices=["repo", "local"],
-                    help="Define the model source: 'repo' for latest version from repository or 'local' for using local files and model v2.0.2.")
+parser.add_argument("-ms", "--model-source", default="local", choices=["api", "local"],
+                    help="Define the model source: 'api' for latest version from repository or 'local' for using local files and model v2.0.2.")
 args = parser.parse_args()
 
 os.environ['OUTPUT'] = args.output  # Set environment variable for output folder.

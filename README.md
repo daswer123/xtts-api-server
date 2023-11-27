@@ -39,8 +39,8 @@ options:
   -sf SPEAKER_FOLDER, --speaker_folder The folder where you get the samples for tts
   -o OUTPUT, --output Output folder
   -t TUNNEL_URL, --tunnel URL of tunnel used (e.g: ngrok, localtunnel)
-  -ms MODEL_SOURCE, --model-source MODEL_SOURCE
-                        Define the model source: 'repo' to download the latest version from the repository; 'local' uses a local copy of version 2.0.2 by default.
+  -ms MODEL_SOURCE, --model-source ["api","local"]
+                        Define the model source: 'api' to download the latest version from the repository; 'local' uses a local copy of version 2.0.2 by default.
 ```
 
 If you want your host to listen, use -hs 0.0.0.0

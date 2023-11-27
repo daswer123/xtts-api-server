@@ -52,7 +52,7 @@ class TTSWrapper:
         # self.load_model()
     
     def load_model(self):
-        if self.model_source == "repo":
+        if self.model_source == "api":
           self.model = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(self.device)
         else:
           self.load_local_model()
@@ -169,7 +169,7 @@ class TTSWrapper:
         )
 
         torchaudio.save(output_file, torch.tensor(out["wav"]).unsqueeze(0), 24000)
-        
+
         generate_end_time = time.time()  # Record the time to generate TTS
         generate_elapsed_time = generate_end_time - generate_start_time
 
