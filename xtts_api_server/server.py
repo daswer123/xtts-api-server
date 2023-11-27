@@ -19,13 +19,24 @@ SPEAKER_FOLDER = os.getenv('SPEAKER', 'speakers')
 BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
 MODEL_SOURCE = os.getenv("MODEL_SOURCE", "apiManual")
 LOWVRAM_MODE = os.getenv("LOWVRAM_MODE") == 'true'
+MODEL_VERSION = os.getenv("MODEL_VERSION","2.0.2")
 
 # Create an instance of the TTSWrapper class and server
 app = FastAPI()
-XTTS = TTSWrapper(LOWVRAM_MODE,MODEL_SOURCE,OUTPUT_FOLDER,SPEAKER_FOLDER)
+XTTS = TTSWrapper(OUTPUT_FOLDER,SPEAKER_FOLDER,LOWVRAM_MODE,MODEL_SOURCE,MODEL_VERSION)
+
+# Create version string
+version_string = ""
+if MODEL_SOURCE == "api":
+    version_string = "lastest"
+else:
+    version_string = "v"+MODEL_VERSION
+
+if MODEL_SOURCE == "api" and MODEL_SOURCE != "2.0.2":
+    logger.warning("Attention you have specified flag -v but you have selected --model-source api, please change --model-souce to apiManual or local to use the specified version, otherwise the latest version of the model will be loaded.")
 
 # Load model
-logger.info("The model starts to load,wait until it loads")
+logger.info(f"The model {version_string} starts to load,wait until it loads")
 XTTS.load_model() 
 
 # Add CORS middleware 

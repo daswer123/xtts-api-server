@@ -14,6 +14,7 @@ from xtts_api_server.modeldownloader import download_model,check_tts_version
 from loguru import logger
 import os
 import time 
+import re
 
 # List of supported language codes
 supported_languages = {
@@ -39,7 +40,7 @@ supported_languages = {
 reversed_supported_languages = {name: code for code, name in supported_languages.items()}
 
 class TTSWrapper:
-    def __init__(self,lowvram = False,model_source = "local",output_folder = "./output", speaker_folder="./speakers"):
+    def __init__(self,output_folder = "./output", speaker_folder="./speakers",lowvram = False,model_source = "local",model_version = "2.0.2"):
 
         self.device = 'cpu' if lowvram else ("cuda" if torch.cuda.is_available() else "cpu")
         self.lowvram = lowvram  # Store whether we want to run in low VRAM mode.
@@ -47,9 +48,11 @@ class TTSWrapper:
         self.latents_cache = {} 
 
         self.model_source = model_source
+        self.model_version = model_version
+
         self.speaker_folder = speaker_folder
         self.output_folder = output_folder
-
+        
         self.create_directories()
         check_tts_version()
     
@@ -59,11 +62,11 @@ class TTSWrapper:
 
         if self.model_source == "apiManual":
             this_dir = Path(__file__).parent.resolve()
-            download_model(this_dir)
+            download_model(this_dir,self.model_version)
 
             this_dir = Path(__file__).parent.resolve()
-            config_path = this_dir / 'models' / 'xttsv2_2.0.2' / 'config.json'
-            checkpoint_dir = this_dir / 'models' / 'xttsv2_2.0.2'
+            config_path = this_dir / 'models' / f'xttsv2_{self.model_version}' / 'config.json'
+            checkpoint_dir = this_dir / 'models' / f'xttsv2_{self.model_version}'
 
             self.model = TTS(model_path=checkpoint_dir,config_path=config_path).to(self.device)
 
@@ -78,11 +81,12 @@ class TTSWrapper:
     
     def load_local_model(self):
         this_dir = Path(__file__).parent.resolve()
-        download_model(this_dir)
+        download_model(this_dir,self.model_version)
 
         config = XttsConfig()
-        config_path = this_dir / 'models' / 'xttsv2_2.0.2' / 'config.json'
-        checkpoint_dir = this_dir / 'models' / 'xttsv2_2.0.2'
+        config_path = this_dir / 'models' / f'xttsv2_{self.model_version}' / 'config.json'
+        checkpoint_dir = this_dir / 'models' / f'xttsv2_{self.model_version}'
+
         config.load_json(str(config_path))
         
         self.model = Xtts.init_from_config(config)
@@ -183,6 +187,13 @@ class TTSWrapper:
     def list_languages(self):
         return reversed_supported_languages
 
+    def clean_text(self,text):
+        # Remove asterisks and line breaks
+        text = re.sub(r'[\*\r\n]', '', text)
+        # Replace double quotes with single quotes and correct punctuation around quotes
+        text = re.sub(r'"\s?(.*?)\s?"', r"'\1'", text)
+        return text
+
     def local_generation(self,text,speaker_wav,language,output_file):
         # Log time
         generate_start_time = time.time()  # Record the start time of loading the model
@@ -240,15 +251,15 @@ class TTSWrapper:
                 output_file = os.path.join(self.output_folder, file_name_or_path)
 
             # Replace double quotes with single, asterisks, carriage returns, and line feeds
-            text = text.replace('"', "'").replace(".'", "'.").replace('*', '').replace('\r', '').replace('\n', '')
+            clear_text = self.clean_text(text)
 
             self.switch_model_device() # Load to CUDA if lowram ON
 
             # Define generation if model via api or locally
             if self.model_source == "local":
-                self.local_generation(text,speaker_wav,language,output_file)
+                self.local_generation(clear_text,speaker_wav,language,output_file)
             else:
-                self.api_generation(text,speaker_wav,language,output_file)
+                self.api_generation(clear_text,speaker_wav,language,output_file)
             
             self.switch_model_device() # Unload to CPU if lowram ON
             return output_file

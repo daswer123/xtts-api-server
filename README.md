@@ -40,6 +40,7 @@ options:
   -o OUTPUT, --output Output folder
   -t TUNNEL_URL, --tunnel URL of tunnel used (e.g: ngrok, localtunnel)
   -ms MODEL_SOURCE, --model-source ["api","apiManual","local"]
+  -v MODEL_VERSION, --version You can choose any version of the model, keep in mind that if you choose model-source api, only the latest version will be loaded
   --lowvram The mode in which the model will be stored in RAM and when the processing will move to VRAM, the difference in speed is small
 ```
 
@@ -49,9 +50,11 @@ The -t or --tunnel flag is needed so that when you get speakers via get you get 
 
 Model-source defines in which format you want to use xtts:
 
-1. `local` - loads a version 2.0.2 model into the models folder and uses `XttsConfig` and `inference`.
-2. `apiManual` - loads a version 2.0.2 model into the models folder and uses the `tts_to_file` function from the TTS api
-3. `api` - will load the latest version of the model..
+1. `local` - loads version 2.0.2 by default, but you can specify the version via the -v flag, model saves into the models folder and uses `XttsConfig` and `inference`.
+2. `apiManual` - loads version 2.0.2 by default, but you can specify the version via the -v flag, model saves into the models folder and uses the `tts_to_file` function from the TTS api
+3. `api` - will load the latest version of the model. The -v flag won't work.
+
+All versions of the XTTSv2 model can be found [here](https://huggingface.co/coqui/XTTS-v2/tree/v2.0.2) in the branches
 
 The first time you run or generate, you may need to confirm that you agree to use XTTS.
 
