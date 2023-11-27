@@ -9,6 +9,10 @@ I created a Pull Request that has been merged into the dev branch of SillyTavern
 
 The TTS module or server can be used in any way you prefer.
 
+## Changelog
+
+You can keep track of all changes on the [release page](https://github.com/daswer123/xtts-api-server/releases)
+
 ## Installation
 
 To begin, install the `xtts-api-server` package using pip:
