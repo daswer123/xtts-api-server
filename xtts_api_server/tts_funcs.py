@@ -90,14 +90,19 @@ class TTSWrapper:
         self.model.to(self.device)
 
     def switch_model_device(self):
+        # We check for lowram and the existence of cuda
         if self.lowvram and torch.cuda.is_available():
-            if self.device == 'cuda':
-                self.device = "cpu"
+            with torch.no_grad():
+                if self.device == 'cuda':
+                    self.device = "cpu"
+                else:
+                    self.device = "cuda"
+
                 self.model.to(self.device)
+
+            if self.device == 'cpu':
+                # Clearing the cache to free up VRAM
                 torch.cuda.empty_cache()
-            else:
-                self.device = "cuda"
-                self.model.to(self.device)
 
     def get_or_create_latents(self, speaker_wav):
         if speaker_wav not in self.latents_cache:
@@ -116,7 +121,6 @@ class TTSWrapper:
         logger.info(f"Latents created for all {len(speakers_list)} speakers.")
 
     def create_directories(self):
-        # A list of all mystical places to be checked or conjured.
         directories = [self.output_folder, self.speaker_folder]
 
         for sanctuary in directories:
