@@ -53,22 +53,22 @@ class SynthesisFileRequest(BaseModel):
     language: str
     file_name_or_path: str  
 
-@app.get("/speakers_default/")
+@app.get("/speakers_default")
 def get_speakers():
     speakers = XTTS.get_speakers()
     return speakers
 
-@app.get("/speakers/")
+@app.get("/speakers")
 def get_speakers():
     speakers = XTTS.get_speakers_special()
     return speakers
 
-@app.get("/languages/")
+@app.get("/languages")
 def get_languages():
     languages = XTTS.list_languages()
     return {"languages": languages}
 
-@app.get("/get_folders/")
+@app.get("/get_folders")
 def get_folders():
     speaker_folder = XTTS.speaker_folder
     output_folder = XTTS.output_folder
@@ -83,7 +83,7 @@ def get_sample(file_name: str):
         logger.error("File not found")
         raise HTTPException(status_code=404, detail="File not found")
 
-@app.post("/set_output/")
+@app.post("/set_output")
 def set_output(output_req: OutputFolderRequest):
     try:
         XTTS.set_out_folder(output_req.output_folder)
@@ -92,7 +92,7 @@ def set_output(output_req: OutputFolderRequest):
         logger.error(e)
         raise HTTPException(status_code=400, detail=str(e))
 
-@app.post("/set_speaker_folder/")
+@app.post("/set_speaker_folder")
 def set_speaker_folder(speaker_req: SpeakerFolderRequest):
     try:
         XTTS.set_speaker_folder(speaker_req.speaker_folder)
@@ -128,7 +128,7 @@ async def tts_to_audio(request: SynthesisRequest):
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 
-@app.post("/tts_to_file/")
+@app.post("/tts_to_file")
 async def tts_to_file(request: SynthesisFileRequest):
     try:
         logger.info(f"Processing TTS to file with request: {request}")

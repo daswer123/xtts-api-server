@@ -1,0 +1,20 @@
+version: '3.4'
+
+services:
+  xttsapiserver:
+    image: xttsapiserver
+    env_file: .env
+    build:
+      context: ..
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "${HOST_PORT:-8020}:${CONTAINER_PORT:-8020}"
+    volumes:
+      - ./tts-models:/root/.local/share/tts:rw
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ['0']
+              capabilities: [gpu]
