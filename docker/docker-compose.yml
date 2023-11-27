@@ -8,7 +8,7 @@ services:
       context: ..
       dockerfile: ./docker/Dockerfile
     ports:
-      - "${HOST_PORT:-8020}${CONTAINER_PORT:-8020}"
+      - "${HOST_PORT:-8020}:${CONTAINER_PORT:-8020}"
     volumes:
       - ./tts-models:/root/.local/share/tts:rw
     deploy:
