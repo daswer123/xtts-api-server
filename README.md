@@ -49,7 +49,7 @@ options:
   --streaming-mode Enables streaming mode, currently needs a lot of work.
 ```
 
-You can see about streaming mode [here]()
+You can see about streaming mode [here](https://github.com/daswer123/xtts-api-server/pull/10)
 Attention, streaming work has serious issues
 Works only on local computer, can't interrupt current recording, recording is played from console, not from browser
 
