@@ -12,6 +12,8 @@ from pathlib import Path
 import shutil
 from loguru import logger
 from argparse import ArgumentParser
+import requests
+
 
 from xtts_api_server.tts_funcs import TTSWrapper,supported_languages
 from xtts_api_server.RealtimeTTS import TextToAudioStream, CoquiEngine
@@ -145,6 +147,11 @@ async def tts_to_audio(request: SynthesisRequest):
             # It's a hack, just send 1 second of silence so that there is no sillyTavern error.
             output_folder_path = Path(XTTS.output_folder)
             output = output_folder_path / "silence.wav"
+
+            response = requests.get("https://github.com/daswer123/xtts-api-server/raw/streaming/xtts_api_server/RealtimeTTS/silence.wav")
+
+            with open(output, 'wb') as f:  # Open the gates of the storage room...
+                f.write(response.content)
 
             return FileResponse(
                 path=output,

@@ -418,7 +418,7 @@ class CoquiEngine(BaseEngine):
             model_folder = os.path.join(local_models_path, f'v{model_name}')
             logging.info(f"Local models path: \"{model_folder}\"")
         else:
-            model_folder = os.path.join("xtts_api_server", "models", f'v{model_name}')
+            model_folder = os.path.join("models", f'v{model_name}')
             logging.info(f"Checking for models within application directory: \"{model_folder}\"")
 
         os.makedirs(model_folder, exist_ok=True)
