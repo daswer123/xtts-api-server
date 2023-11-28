@@ -104,3 +104,6 @@ The following post is a quote by user [Material1276 from reddit](https://www.red
 > Make sure the clip doesn't start or end with breathy sounds (breathing in/out etc).
 >
 > Using AI generated audio clips may introduce unwanted sounds as its already a copy/simulation of a voice, though, this would need testing.
+
+# Credit
+1) Thanks to the author **Kolja Beigel** for the repository [RealtimeTTS](https://github.com/KoljaB/RealtimeTTS) , I took some of its code for my project.
