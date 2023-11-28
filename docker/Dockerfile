@@ -21,4 +21,4 @@ RUN --mount=type=cache,target=/root/.cache/pip,rw \
 
 EXPOSE ${CONTAINER_PORT:-8020} ${CONTAINER_API_PORT:-8020}
 # echo 'y' is to accept coqui tts model download terms
-CMD echo "y" | python3 -m xtts_api_server -hs 0.0.0.0 -sf ${EXAMPLE_FOLDER:-"/app/example"} -t ${TUNNEL:-"http://localhost:8020"} -p ${CONTAINER_PORT:-8020} 
+CMD echo "y" | python3 -m xtts_api_server -hs 0.0.0.0 -sf ${EXAMPLE_FOLDER:-"/app/example"} -t ${TUNNEL:-"http://localhost:8020"} -p ${CONTAINER_PORT:-8020}  -ms ${MODEL_SOURCE:-"apiManual"}
