@@ -46,7 +46,12 @@ options:
   -ms MODEL_SOURCE, --model-source ["api","apiManual","local"]
   -v MODEL_VERSION, --version You can choose any version of the model, keep in mind that if you choose model-source api, only the latest version will be loaded
   --lowvram The mode in which the model will be stored in RAM and when the processing will move to VRAM, the difference in speed is small
+  --streaming-mode Enables streaming mode, currently needs a lot of work.
 ```
+
+You can see about streaming mode [here]()
+Attention, streaming work has serious issues
+Works only on local computer, can't interrupt current recording, recording is played from console, not from browser
 
 If you want your host to listen, use -hs 0.0.0.0
 

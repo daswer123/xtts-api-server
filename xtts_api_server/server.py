@@ -1,17 +1,21 @@
 from TTS.api import TTS
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse,StreamingResponse
 
 from pydantic import BaseModel
 import uvicorn
 
 import os
+import time
+from pathlib import Path
 import shutil
 from loguru import logger
 from argparse import ArgumentParser
 
 from xtts_api_server.tts_funcs import TTSWrapper,supported_languages
+from xtts_api_server.RealtimeTTS import TextToAudioStream, CoquiEngine
+import xtts_api_server.RealtimeTTS
 
 # Default Folders , you can change them via API
 OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
@@ -19,6 +23,7 @@ SPEAKER_FOLDER = os.getenv('SPEAKER', 'speakers')
 BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
 MODEL_SOURCE = os.getenv("MODEL_SOURCE", "apiManual")
 LOWVRAM_MODE = os.getenv("LOWVRAM_MODE") == 'true'
+STREAM_MODE = os.getenv("STREAM_MODE") == 'true'
 MODEL_VERSION = os.getenv("MODEL_VERSION","2.0.2")
 
 # Create an instance of the TTSWrapper class and server
@@ -36,8 +41,14 @@ if MODEL_SOURCE == "api" and MODEL_SOURCE != "2.0.2":
     logger.warning("Attention you have specified flag -v but you have selected --model-source api, please change --model-souce to apiManual or local to use the specified version, otherwise the latest version of the model will be loaded.")
 
 # Load model
-logger.info(f"The model {version_string} starts to load,wait until it loads")
-XTTS.load_model() 
+# logger.info(f"The model {version_string} starts to load,wait until it loads")
+if STREAM_MODE:
+    # Load model for Streaming
+    logger.info("Load model for Streaming")
+    engine = CoquiEngine(specific_model=MODEL_VERSION)
+    stream = TextToAudioStream(engine)
+else:
+  XTTS.load_model() 
 
 # Add CORS middleware 
 origins = ["*"]
@@ -116,33 +127,59 @@ def set_speaker_folder(speaker_req: SpeakerFolderRequest):
 
 @app.post("/tts_to_audio/")
 async def tts_to_audio(request: SynthesisRequest):
-    try:
-        if XTTS.model_source == "local":
-          logger.info(f"Processing TTS to audio with request: {request}")
-          
-        # Validate language code against supported languages.
-        if request.language.lower() not in supported_languages:
-            raise HTTPException(status_code=400,
-                                detail="Language code sent is either unsupported or misspelled.")
+    if STREAM_MODE:
+        try:
+            # Validate language code against supported languages.
+            if request.language.lower() not in supported_languages:
+                raise HTTPException(status_code=400,
+                                    detail="Language code sent is either unsupported or misspelled.")
 
-        # Generate an audio file using process_tts_to_file.
-        output_file_path = XTTS.process_tts_to_file(
-            text=request.text,
-            speaker_name_or_path=request.speaker_wav,
-            language=request.language.lower()
-        )
+            speaker_wav = XTTS.get_speaker_path(request.speaker_wav)
 
-        # Return the file in the response
-        return FileResponse(
-            path=output_file_path,
-            media_type='audio/wav',
-            filename="output.wav",
+            engine.set_voice(speaker_wav)
+            engine.language = request.language.lower()
+            # Start streaming, works only on your local computer.
+            stream.feed(request.text)
+            stream.play()
+
+            # It's a hack, just send 1 second of silence so that there is no sillyTavern error.
+            output_folder_path = Path(XTTS.output_folder)
+            output = output_folder_path / "silence.wav"
+
+            return FileResponse(
+                path=output,
+                media_type='audio/wav',
+                filename="silence.wav",
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+    else:
+        try:
+            if XTTS.model_source == "local":
+              logger.info(f"Processing TTS to audio with request: {request}")
+
+            # Validate language code against supported languages.
+            if request.language.lower() not in supported_languages:
+                raise HTTPException(status_code=400,
+                                    detail="Language code sent is either unsupported or misspelled.")
+
+            # Generate an audio file using process_tts_to_file.
+            output_file_path = XTTS.process_tts_to_file(
+                text=request.text,
+                speaker_name_or_path=request.speaker_wav,
+                language=request.language.lower()
             )
 
-    except Exception as e:
-        logger.error(e)
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+            # Return the file in the response
+            return FileResponse(
+                path=output_file_path,
+                media_type='audio/wav',
+                filename="output.wav",
+                )
 
+        except Exception as e:
+            logger.error(e)
+            raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 @app.post("/tts_to_file")
 async def tts_to_file(request: SynthesisFileRequest):
