@@ -60,14 +60,9 @@ def download_model(this_dir,model_version):
 
     # Define files and their corresponding URLs
     files_to_download = {
-         'LICENSE.txt': f'https://huggingface.co/coqui/XTTS-v2/resolve/v{model_version}/LICENSE.txt?download=true',
-         'README.md': f'https://huggingface.co/coqui/XTTS-v2/resolve/v{model_version}/README.md?download=true',
-         'config.json': f'https://huggingface.co/coqui/XTTS-v2/resolve/v{model_version}/config.json?download=true',
-         'dvae.pth': f'https://huggingface.co/coqui/XTTS-v2/resolve/v{model_version}/dvae.pth?download=true',
-         'hash.md5': f'https://huggingface.co/coqui/XTTS-v2/resolve/v{model_version}/hash.md5?download=true',
-         'mel_stats.pth': f'https://huggingface.co/coqui/XTTS-v2/resolve/v{model_version}/mel_stats.pth?download=true',
-         'model.pth': f'https://huggingface.co/coqui/XTTS-v2/resolve/v{model_version}/model.pth?download=true',
-         'vocab.json': f'https://huggingface.co/coqui/XTTS-v2/resolve/v{model_version}/vocab.json?download=true',
+         "config.json": f"https://huggingface.co/coqui/XTTS-v2/raw/v{model_version}/config.json",
+         "model.pth": f"https://huggingface.co/coqui/XTTS-v2/resolve/v{model_version}/model.pth?download=true",
+         "vocab.json": f"https://huggingface.co/coqui/XTTS-v2/raw/v{model_version}/vocab.json"
     }
 
     # Check and create directories
