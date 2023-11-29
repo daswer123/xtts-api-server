@@ -12,6 +12,7 @@ from pathlib import Path
 import shutil
 from loguru import logger
 from argparse import ArgumentParser
+from pathlib import Path
 
 from xtts_api_server.tts_funcs import TTSWrapper,supported_languages
 from xtts_api_server.RealtimeTTS import TextToAudioStream, CoquiEngine
@@ -49,7 +50,11 @@ if STREAM_MODE:
     # Load model for Streaming
     logger.warning("'Streaming Mode' has certain limitations, you can read about them here https://github.com/daswer123/xtts-api-server#about-streaming-mode")
     logger.info("Load model for Streaming")
-    engine = CoquiEngine(specific_model=MODEL_VERSION)
+
+    this_dir = Path(__file__).parent.resolve()
+    model_path = this_dir / "models"
+    
+    engine = CoquiEngine(specific_model=MODEL_VERSION,local_models_path=model_path)
     stream = TextToAudioStream(engine)
 else:
   XTTS.load_model() 
