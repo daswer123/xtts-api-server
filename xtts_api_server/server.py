@@ -47,7 +47,7 @@ if MODEL_SOURCE == "api" and MODEL_SOURCE != "2.0.2":
 # logger.info(f"The model {version_string} starts to load,wait until it loads")
 if STREAM_MODE:
     # Load model for Streaming
-    logger.warning("'Streaming Mode' has certain limitations, you can read about them here https://github.com/daswer123/xtts-api-server/pull/10#issuecomment-1831113310")
+    logger.warning("'Streaming Mode' has certain limitations, you can read about them here https://github.com/daswer123/xtts-api-server#about-streaming-mode")
     logger.info("Load model for Streaming")
     engine = CoquiEngine(specific_model=MODEL_VERSION)
     stream = TextToAudioStream(engine)
