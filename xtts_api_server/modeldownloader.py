@@ -56,7 +56,7 @@ def check_tts_version():
 def download_model(this_dir,model_version):
     # Define paths
     base_path = this_dir / 'models'
-    model_path = base_path / f'xttsv2_{model_version}'
+    model_path = base_path / f'v{model_version}'
 
     # Define files and their corresponding URLs
     files_to_download = {

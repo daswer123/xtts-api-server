@@ -65,8 +65,8 @@ class TTSWrapper:
             download_model(this_dir,self.model_version)
 
             this_dir = Path(__file__).parent.resolve()
-            config_path = this_dir / 'models' / f'xttsv2_{self.model_version}' / 'config.json'
-            checkpoint_dir = this_dir / 'models' / f'xttsv2_{self.model_version}'
+            config_path = this_dir / 'models' / f'v{self.model_version}' / 'config.json'
+            checkpoint_dir = this_dir / 'models' / f'v{self.model_version}'
 
             self.model = TTS(model_path=checkpoint_dir,config_path=config_path).to(self.device)
 
@@ -84,8 +84,8 @@ class TTSWrapper:
         download_model(this_dir,self.model_version)
 
         config = XttsConfig()
-        config_path = this_dir / 'models' / f'xttsv2_{self.model_version}' / 'config.json'
-        checkpoint_dir = this_dir / 'models' / f'xttsv2_{self.model_version}'
+        config_path = this_dir / 'models' / f'v{self.model_version}' / 'config.json'
+        checkpoint_dir = this_dir / 'models' / f'v{self.model_version}'
 
         config.load_json(str(config_path))
         
@@ -223,25 +223,29 @@ class TTSWrapper:
                 language=language,
                 file_path=output_file  # Assuming tts_to_file takes 'file_path' as an argument.
         )
-
-    def process_tts_to_file(self, text, speaker_name_or_path, language, file_name_or_path="out.wav"):
-        try:
-            # Check if the speaker path is a .wav file or just the name
-            if speaker_name_or_path.endswith('.wav'):
+    
+    def get_speaker_path(self,speaker_name_or_path):
+        # Check if the speaker path is a .wav file or just the name
+        if speaker_name_or_path.endswith('.wav'):
                 if os.path.isabs(speaker_name_or_path):
                     # If it's an absolute path for the speaker file
                     speaker_wav = speaker_name_or_path
                 else:
                     # It's just a filename; append it to the speakers folder
                     speaker_wav = os.path.join(self.speaker_folder, speaker_name_or_path)
-            else:
+        else:
                 # Look for the corresponding .wav in our list of speakers
                 speakers_list = self.list_speakers()
                 if f"{speaker_name_or_path}.wav" in speakers_list:
                     speaker_wav = os.path.join(self.speaker_folder, f"{speaker_name_or_path}.wav")
                 else:
                     raise ValueError(f"Speaker {speaker_name_or_path} not found.")
+        return speaker_wav
 
+
+    def process_tts_to_file(self, text, speaker_name_or_path, language, file_name_or_path="out.wav"):
+        try:
+            speaker_wav = self.get_speaker_path(speaker_name_or_path)
             # Determine output path based on whether a full path or a file name was provided
             if os.path.isabs(file_name_or_path):
                 # An absolute path was provided by user; use as is.
