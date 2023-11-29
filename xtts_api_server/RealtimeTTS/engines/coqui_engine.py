@@ -9,7 +9,7 @@ import torch
 import json
 import os
 import re
-
+from loguru import logger
 
 class CoquiEngine(BaseEngine):
 
@@ -432,7 +432,7 @@ class CoquiEngine(BaseEngine):
         for file_name, url in files.items():
             file_path = os.path.join(model_folder, file_name)
             if not os.path.exists(file_path):
-                logging.info(f"Downloading {file_name}...")
+                logger.info(f"Downloading {file_name} for Model v{model_name}...")
                 r = requests.get(url, allow_redirects=True)
                 with open(file_path, 'wb') as f:
                     f.write(r.content)

@@ -1,5 +1,6 @@
 if __name__ == '__main__':
     import os
+    import time
     from RealtimeTTS import TextToAudioStream, CoquiEngine
 
     def dummy_generator():
@@ -9,7 +10,6 @@ if __name__ == '__main__':
     engine = CoquiEngine()
     stream = TextToAudioStream(engine)
     
-    os.system('cls')
     print ("Starting to play stream")
     stream.feed(dummy_generator()).play()
 

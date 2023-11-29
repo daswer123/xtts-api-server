@@ -12,8 +12,6 @@ from pathlib import Path
 import shutil
 from loguru import logger
 from argparse import ArgumentParser
-import requests
-
 
 from xtts_api_server.tts_funcs import TTSWrapper,supported_languages
 from xtts_api_server.RealtimeTTS import TextToAudioStream, CoquiEngine
@@ -27,6 +25,9 @@ MODEL_SOURCE = os.getenv("MODEL_SOURCE", "apiManual")
 LOWVRAM_MODE = os.getenv("LOWVRAM_MODE") == 'true'
 STREAM_MODE = os.getenv("STREAM_MODE") == 'true'
 MODEL_VERSION = os.getenv("MODEL_VERSION","2.0.2")
+
+engine = ""
+stream = ""
 
 # Create an instance of the TTSWrapper class and server
 app = FastAPI()
@@ -46,6 +47,7 @@ if MODEL_SOURCE == "api" and MODEL_SOURCE != "2.0.2":
 # logger.info(f"The model {version_string} starts to load,wait until it loads")
 if STREAM_MODE:
     # Load model for Streaming
+    logger.warning("'Streaming Mode' has certain limitations, you can read about them here https://github.com/daswer123/xtts-api-server/pull/10#issuecomment-1831113310")
     logger.info("Load model for Streaming")
     engine = CoquiEngine(specific_model=MODEL_VERSION)
     stream = TextToAudioStream(engine)
@@ -131,6 +133,7 @@ def set_speaker_folder(speaker_req: SpeakerFolderRequest):
 async def tts_to_audio(request: SynthesisRequest):
     if STREAM_MODE:
         try:
+            global stream
             # Validate language code against supported languages.
             if request.language.lower() not in supported_languages:
                 raise HTTPException(status_code=400,
@@ -140,18 +143,15 @@ async def tts_to_audio(request: SynthesisRequest):
 
             engine.set_voice(speaker_wav)
             engine.language = request.language.lower()
+
             # Start streaming, works only on your local computer.
+
             stream.feed(request.text)
             stream.play()
 
             # It's a hack, just send 1 second of silence so that there is no sillyTavern error.
-            output_folder_path = Path(XTTS.output_folder)
-            output = output_folder_path / "silence.wav"
-
-            response = requests.get("https://github.com/daswer123/xtts-api-server/raw/streaming/xtts_api_server/RealtimeTTS/silence.wav")
-
-            with open(output, 'wb') as f:  # Open the gates of the storage room...
-                f.write(response.content)
+            this_dir = Path(__file__).parent.resolve()
+            output = this_dir / "RealtimeTTS" / "silence.wav"
 
             return FileResponse(
                 path=output,

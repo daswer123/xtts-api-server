@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "xtts-api-server"
-version = "0.5.1"
+version = "0.5.0"
 authors = [
   { name="daswer123", email="daswerq123@gmail.com" },
 ]
@@ -26,8 +26,8 @@ dependencies = [
   "loguru",
   "pydantic",
   "python-dotenv",
-  "torch",
-  "torchaudio",
+  "torch<=2.1.0",
+  "torchaudio<=2.1.0",
   "uvicorn",
   "cutlet",
   'fugashi[unidic-lite]',
