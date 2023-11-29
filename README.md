@@ -5,9 +5,9 @@ You can check out the [guide](https://rentry.org/xtts-api-server-colab-guide)
 
 This project is inspired by [silero-api-server](https://github.com/ouoertheo/silero-api-server) and utilizes [XTTSv2](https://github.com/coqui-ai/TTS).
 
-I created a Pull Request that has been merged into the dev branch of SillyTavern: [here](https://github.com/SillyTavern/SillyTavern/pull/1383).
+This server was created for [SillyTavern](https://github.com/SillyTavern/SillyTavern) but you can use it for your needs
 
-The TTS module or server can be used in any way you prefer.
+Feel free to make PRs or use the code for your own needs
 
 ## Changelog
 
@@ -32,7 +32,7 @@ pip install torch==2.1.0 torchaudio==2.1.0 --index-url https://download.pytorch.
 `python -m xtts_api_server` will run on default ip and port (localhost:8020)
 
 ```
-usage: xtts_api_server [-h] [-hs HOST] [-p PORT] [-sf SPEAKER_FOLDER] [-o OUTPUT] [-t TUNNEL_URL] [-ms MODEL_SOURCE] [--lowvram]
+usage: xtts_api_server [-h] [-hs HOST] [-p PORT] [-sf SPEAKER_FOLDER] [-o OUTPUT] [-t TUNNEL_URL] [-ms MODEL_SOURCE] [--lowvram] [--streaming-mode]
 
 Run XTTSv2 within a FastAPI application
 
@@ -46,6 +46,7 @@ options:
   -ms MODEL_SOURCE, --model-source ["api","apiManual","local"]
   -v MODEL_VERSION, --version You can choose any version of the model, keep in mind that if you choose model-source api, only the latest version will be loaded
   --lowvram The mode in which the model will be stored in RAM and when the processing will move to VRAM, the difference in speed is small
+  --streaming-mode Enables streaming mode, currently has certain limitations, as described below.
 ```
 
 If you want your host to listen, use -hs 0.0.0.0
@@ -61,6 +62,21 @@ Model-source defines in which format you want to use xtts:
 All versions of the XTTSv2 model can be found [here](https://huggingface.co/coqui/XTTS-v2/tree/v2.0.2) in the branches
 
 The first time you run or generate, you may need to confirm that you agree to use XTTS.
+
+# About Streaming mode
+
+Streaming mode allows you to get audio and play it back almost immediately. However, it has a number of limitations.
+
+You can see how this mode works [here](https://www.youtube.com/watch?v=jHylNGQDDA0) and [here](https://www.youtube.com/watch?v=6vhrxuWcV3U)
+
+Now, about the limitations
+
+1. You cannot stop audio playback until it is finished
+2. Can only be used on a local computer
+3. Playing audio from the your pc
+4. Does not work endpoint `tts_to_file` only `tts_to_audio` and it returns 1 second of silence.
+
+You can specify the version of the XTTS model by using the `-v` flag.
 
 # API Docs
 
@@ -99,3 +115,8 @@ The following post is a quote by user [Material1276 from reddit](https://www.red
 > Make sure the clip doesn't start or end with breathy sounds (breathing in/out etc).
 >
 > Using AI generated audio clips may introduce unwanted sounds as its already a copy/simulation of a voice, though, this would need testing.
+
+# Credit
+
+1. Thanks to the author **Kolja Beigel** for the repository [RealtimeTTS](https://github.com/KoljaB/RealtimeTTS) , I took some of its code for my project.
+2. Thanks **[erew123](https://github.com/oobabooga/text-generation-webui/issues/4712#issuecomment-1825593734)** for the note about creating samples and the code to download the models
