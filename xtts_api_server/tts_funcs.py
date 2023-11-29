@@ -65,8 +65,8 @@ class TTSWrapper:
             download_model(this_dir,self.model_version)
 
             this_dir = Path(__file__).parent.resolve()
-            config_path = this_dir / 'models' / f'xttsv2_{self.model_version}' / 'config.json'
-            checkpoint_dir = this_dir / 'models' / f'xttsv2_{self.model_version}'
+            config_path = this_dir / 'models' / f'v{self.model_version}' / 'config.json'
+            checkpoint_dir = this_dir / 'models' / f'v{self.model_version}'
 
             self.model = TTS(model_path=checkpoint_dir,config_path=config_path).to(self.device)
 
@@ -84,8 +84,8 @@ class TTSWrapper:
         download_model(this_dir,self.model_version)
 
         config = XttsConfig()
-        config_path = this_dir / 'models' / f'xttsv2_{self.model_version}' / 'config.json'
-        checkpoint_dir = this_dir / 'models' / f'xttsv2_{self.model_version}'
+        config_path = this_dir / 'models' / f'v{self.model_version}' / 'config.json'
+        checkpoint_dir = this_dir / 'models' / f'v{self.model_version}'
 
         config.load_json(str(config_path))
         
