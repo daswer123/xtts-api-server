@@ -125,6 +125,26 @@ The following post is a quote by user [Material1276 from reddit](https://www.red
 >
 > Using AI generated audio clips may introduce unwanted sounds as its already a copy/simulation of a voice, though, this would need testing.
 
+#  Use Docker image with Docker Compose 
+A Dockerfile is provided to build a Docker image, and a docker-compose.yml file is provided to run the server with Docker Compose as a service. 
+
+You will need to setup the env variables by copying the .env.example file to .env and filling in the values.
+If you want to use your own speakers, you can put it in `example` folder before building the image.
+The example folder will be copied to the container and the server will use it as a speaker folder.
+
+You can build the image with the following command:
+
+```bash
+cd docker
+docker compose build
+```
+
+Then you can run the server with the following command:
+
+```bash
+docker compose up # or with -d to run in background
+```
+
 # Credit
 
 1. Thanks to the author **Kolja Beigel** for the repository [RealtimeTTS](https://github.com/KoljaB/RealtimeTTS) , I took some of its code for my project.
