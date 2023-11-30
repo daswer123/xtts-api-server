@@ -145,7 +145,7 @@ async def tts_to_audio(request: SynthesisRequest):
             # We can interupt and play again
             if stream.is_playing():
                 stream.stop()
-                time.sleep(2)
+                time.sleep(0.1)
                 stream = TextToAudioStream(engine)
 
             engine.set_voice(speaker_wav)
