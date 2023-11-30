@@ -15,7 +15,7 @@ You can keep track of all changes on the [release page](https://github.com/daswe
 
 ## Installation
 
-Simple installation:
+Simple installation :
 
 ```bash
 pip install xtts-api-server
@@ -125,8 +125,9 @@ The following post is a quote by user [Material1276 from reddit](https://www.red
 >
 > Using AI generated audio clips may introduce unwanted sounds as its already a copy/simulation of a voice, though, this would need testing.
 
-#  Use Docker image with Docker Compose 
-A Dockerfile is provided to build a Docker image, and a docker-compose.yml file is provided to run the server with Docker Compose as a service. 
+# Use Docker image with Docker Compose
+
+A Dockerfile is provided to build a Docker image, and a docker-compose.yml file is provided to run the server with Docker Compose as a service.
 
 You will need to setup the env variables by copying the .env.example file to .env and filling in the values.
 If you want to use your own speakers, you can put it in `example` folder before building the image.
