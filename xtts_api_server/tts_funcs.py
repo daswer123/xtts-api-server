@@ -201,12 +201,16 @@ class TTSWrapper:
         gpt_cond_latent, speaker_embedding = self.get_or_create_latents(speaker_wav)
 
         out = self.model.inference(
-            text, 
+            text,
             language,
             gpt_cond_latent=gpt_cond_latent,
             speaker_embedding=speaker_embedding,
-            temperature=0.7,
-            enable_text_splitting=True  
+            temperature=0.75,
+            length_penalty=1.0,
+            repetition_penalty=5.0,
+            top_k=50,
+            top_p=0.85,
+            enable_text_splitting=True
         )
 
         torchaudio.save(output_file, torch.tensor(out["wav"]).unsqueeze(0), 24000)
