@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "xtts-api-server"
-version = "0.5.52"
+version = "0.5.6"
 authors = [
   { name="daswer123", email="daswerq123@gmail.com" },
 ]
