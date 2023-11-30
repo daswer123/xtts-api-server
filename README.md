@@ -15,16 +15,23 @@ You can keep track of all changes on the [release page](https://github.com/daswe
 
 ## Installation
 
-To begin, install the `xtts-api-server` package using pip:
+Simple installation:
 
 ```bash
 pip install xtts-api-server
 ```
 
-I strongly recommend installing PyTorch with CUDA support to leverage the processing power of your video card, which will enhance the speed of the entire process:
+This will install all the necessary dependencies, including a **CPU support only** version of PyTorch
+
+I recommend that you install the GPU version to improve processing speed ( up to 3 times faster )
+
+Installation into virtual environment with GPU support:
 
 ```bash
-pip install torch==2.1.0 torchaudio==2.1.0 --index-url https://download.pytorch.org/whl/cu118
+python -m venv venv
+venv\Scripts\activate
+pip install xtts-api-server
+pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 --index-url https://download.pytorch.org/whl/cu118
 ```
 
 ## Starting Server
@@ -47,6 +54,7 @@ options:
   -v MODEL_VERSION, --version You can choose any version of the model, keep in mind that if you choose model-source api, only the latest version will be loaded
   --lowvram The mode in which the model will be stored in RAM and when the processing will move to VRAM, the difference in speed is small
   --streaming-mode Enables streaming mode, currently has certain limitations, as described below.
+  --streaming-mode-improve Enables streaming mode, includes an improved streaming mode that consumes 2gb more VRAM and uses a better tokenizer and more context.
 ```
 
 If you want your host to listen, use -hs 0.0.0.0
@@ -76,6 +84,8 @@ Now, about the limitations
 3. Does not work endpoint `tts_to_file` only `tts_to_audio` and it returns 1 second of silence.
 
 You can specify the version of the XTTS model by using the `-v` flag.
+
+Improved streaming mode is suitable for complex languages such as Chinese, Japanese, Hindi or if you want the language engine to take more information into account when processing speech.
 
 # API Docs
 

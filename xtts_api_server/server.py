@@ -16,6 +16,7 @@ from pathlib import Path
 
 from xtts_api_server.tts_funcs import TTSWrapper,supported_languages
 from xtts_api_server.RealtimeTTS import TextToAudioStream, CoquiEngine
+from xtts_api_server.modeldownloader import check_stream2sentence_version
 
 # Default Folders , you can change them via API
 OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
@@ -24,6 +25,7 @@ BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
 MODEL_SOURCE = os.getenv("MODEL_SOURCE", "apiManual")
 LOWVRAM_MODE = os.getenv("LOWVRAM_MODE") == 'true'
 STREAM_MODE = os.getenv("STREAM_MODE") == 'true'
+STREAM_MODE_IMPROVE = os.getenv("STREAM_MODE_IMPROVE") == 'true'
 MODEL_VERSION = os.getenv("MODEL_VERSION","2.0.2")
 
 # Create an instance of the TTSWrapper class and server
@@ -42,9 +44,15 @@ if MODEL_SOURCE == "api" and MODEL_SOURCE != "2.0.2":
 
 # Load model
 # logger.info(f"The model {version_string} starts to load,wait until it loads")
-if STREAM_MODE:
+if STREAM_MODE or STREAM_MODE_IMPROVE:
     # Load model for Streaming
+    check_stream2sentence_version()
+
     logger.warning("'Streaming Mode' has certain limitations, you can read about them here https://github.com/daswer123/xtts-api-server#about-streaming-mode")
+
+    if STREAM_MODE_IMPROVE:
+        logger.info("You launched an improved version of streaming, this version features an improved tokenizer and more context when processing sentences, which can be good for complex languages like Chinese")
+        
     logger.info("Load model for Streaming")
 
     this_dir = Path(__file__).parent.resolve()
@@ -132,7 +140,7 @@ def set_speaker_folder(speaker_req: SpeakerFolderRequest):
 
 @app.post("/tts_to_audio/")
 async def tts_to_audio(request: SynthesisRequest):
-    if STREAM_MODE:
+    if STREAM_MODE or STREAM_MODE_IMPROVE:
         try:
             global stream
             # Validate language code against supported languages.
@@ -141,21 +149,29 @@ async def tts_to_audio(request: SynthesisRequest):
                                     detail="Language code sent is either unsupported or misspelled.")
 
             speaker_wav = XTTS.get_speaker_path(request.speaker_wav)
+            language = request.language[0:2]
 
             # We can interupt and play again
             if stream.is_playing():
                 stream.stop()
-                time.sleep(0.1)
                 stream = TextToAudioStream(engine)
 
             engine.set_voice(speaker_wav)
             engine.language = request.language.lower()
-  
-            
+           
             # Start streaming, works only on your local computer.
-            # stream = TextToAudioStream(engine)
             stream.feed(request.text)
-            stream.play_async()
+
+            if STREAM_MODE_IMPROVE:
+              stream.play_async(
+                minimum_sentence_length = 2,
+                minimum_first_fragment_length = 2, 
+                tokenizer="stanza", 
+                language=language,
+                context_size=2
+            ) 
+            else:
+                stream.play_async()
 
             # It's a hack, just send 1 second of silence so that there is no sillyTavern error.
             this_dir = Path(__file__).parent.resolve()

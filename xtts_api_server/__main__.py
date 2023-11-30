@@ -13,6 +13,8 @@ parser.add_argument("-ms", "--model-source", default="apiManual", choices=["api"
 parser.add_argument("-v", "--version", default="2.0.2", type=str, help="You can specify which version of xtts to use,This version will be used everywhere in local, api and apiManual.")
 parser.add_argument("--lowvram", action='store_true', help="Enable low vram mode which switches the model to RAM when not actively processing.")
 parser.add_argument("--streaming-mode", action='store_true', help="Enables streaming mode, currently needs a lot of work.")
+parser.add_argument("--streaming-mode-improve", action='store_true', help="Includes an improved streaming mode that consumes 2gb more VRAM and uses a better tokenizer, good for languages such as Chinese")
+
 args = parser.parse_args()
 
 os.environ['OUTPUT'] = args.output  # Set environment variable for output folder.
@@ -21,7 +23,8 @@ os.environ['BASE_URL'] = "http://" + args.host + ":" + str(args.port)  # Set env
 os.environ['TUNNEL_URL'] = args.tunnel  # it is necessary to correctly return correct previews in list of speakers
 os.environ['MODEL_SOURCE'] = args.model_source  # Set environment variable for the model source
 os.environ["LOWVRAM_MODE"] = str(args.lowvram).lower() # Set lowvram mode
-os.environ["STREAM_MODE"] = str(args.streaming_mode).lower() # Set lowvram mode
+os.environ["STREAM_MODE"] = str(args.streaming_mode).lower() # Enable Streaming mode
+os.environ["STREAM_MODE_IMPROVE"] = str(args.streaming_mode_improve).lower() # Enable improved Streaming mode
 os.environ["MODEL_VERSION"] = args.version # Specify version of XTTS model
 
 from xtts_api_server.server import app

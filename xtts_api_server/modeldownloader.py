@@ -39,6 +39,17 @@ def upgrade_tts_package():
         logger.info("Try installing the new version manually")
         logger.info("pip install --upgrade tts")
 
+
+def upgrade_stream2sentence_package():
+    try:
+        logger.warning("Stream2sentence version is outdated, attempting to upgrade stream2sentence...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install","-q", "--upgrade", "stream2sentence"])
+        logger.info("Stream2sentence has been successfully upgraded ")
+    except Exception as e:
+        logger.error(f"An error occurred while upgrading Stream2sentence: {e}")
+        logger.info("Stream2sentence installing the new version manually")
+        logger.info("pip install --upgrade stream2sentence")
+
 def check_tts_version():
     try:
         tts_version = metadata.version("tts")
@@ -52,6 +63,15 @@ def check_tts_version():
             # logger.info("TTS version is up to date.")
     except metadata.PackageNotFoundError:
         print("TTS is not installed.")
+
+
+def check_stream2sentence_version():
+    try:
+        tts_version = metadata.version("stream2sentence")
+        if version.parse(tts_version) < version.parse("0.2.0"):
+            upgrade_stream2sentence_package()
+    except metadata.PackageNotFoundError:
+        print("stream2sentence is not installed.")
 
 def download_model(this_dir,model_version):
     # Define paths
