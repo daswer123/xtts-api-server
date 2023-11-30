@@ -71,10 +71,9 @@ You can see how this mode works [here](https://www.youtube.com/watch?v=jHylNGQDD
 
 Now, about the limitations
 
-1. You cannot stop audio playback until it is finished
-2. Can only be used on a local computer
-3. Playing audio from the your pc
-4. Does not work endpoint `tts_to_file` only `tts_to_audio` and it returns 1 second of silence.
+1. Can only be used on a local computer
+2. Playing audio from the your pc
+3. Does not work endpoint `tts_to_file` only `tts_to_audio` and it returns 1 second of silence.
 
 You can specify the version of the XTTS model by using the `-v` flag.
 
