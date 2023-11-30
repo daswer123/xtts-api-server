@@ -23,9 +23,9 @@ pip install xtts-api-server
 
 This will install all the necessary dependencies, including a **CPU support only** version of PyTorch
 
-I recommend that you install the GPU version to improve processing speed ( up to 3 times faster )
+I recommend that you install the **GPU version** to improve processing speed ( up to 3 times faster )
 
-Installation into virtual environment with GPU support:
+Installation into virtual environment on **Windows** with **GPU support**:
 
 ```bash
 python -m venv venv
