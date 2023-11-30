@@ -54,7 +54,7 @@ if STREAM_MODE:
     this_dir = Path(__file__).parent.resolve()
     model_path = this_dir / "models"
     
-    engine = CoquiEngine(specific_model=MODEL_VERSION,local_models_path=model_path)
+    engine = CoquiEngine(specific_model=MODEL_VERSION,local_models_path=str(model_path))
     stream = TextToAudioStream(engine)
 else:
   XTTS.load_model() 
