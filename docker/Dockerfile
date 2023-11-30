@@ -3,7 +3,7 @@ FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
 LABEL description="Docker image for xtts-api-server"
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked,rw apt-get update && \
-    apt-get install --no-install-recommends -y python3-dev libportaudio2 libasound-dev git python3 python3-pip make g++ ffmpeg && \
+    apt-get install --no-install-recommends -y python3-dev portaudio19-dev libportaudio2 libasound2-dev libportaudiocpp0 git python3 python3-pip make g++ ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
 RUN --mount=type=cache,target=/root/.cache/pip,rw pip3 install virtualenv
