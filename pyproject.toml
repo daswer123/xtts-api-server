@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "xtts-api-server"
-version = "0.5.4"
+version = "0.5.5"
 authors = [
   { name="daswer123", email="daswerq123@gmail.com" },
 ]
@@ -21,7 +21,7 @@ dependencies = [
   "PyAudio==0.2.14",
   "requests==2.31.0",
   "pyttsx3==2.90",
-  "stream2sentence==0.1.6",
+  "stream2sentence==0.2.0",
   "fastapi>=0.104.1",
   "loguru",
   "pydantic",
