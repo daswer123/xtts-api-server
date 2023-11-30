@@ -16,7 +16,6 @@ from pathlib import Path
 
 from xtts_api_server.tts_funcs import TTSWrapper,supported_languages
 from xtts_api_server.RealtimeTTS import TextToAudioStream, CoquiEngine
-import xtts_api_server.RealtimeTTS
 
 # Default Folders , you can change them via API
 OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
@@ -26,9 +25,6 @@ MODEL_SOURCE = os.getenv("MODEL_SOURCE", "apiManual")
 LOWVRAM_MODE = os.getenv("LOWVRAM_MODE") == 'true'
 STREAM_MODE = os.getenv("STREAM_MODE") == 'true'
 MODEL_VERSION = os.getenv("MODEL_VERSION","2.0.2")
-
-engine = ""
-stream = ""
 
 # Create an instance of the TTSWrapper class and server
 app = FastAPI()
@@ -146,13 +142,20 @@ async def tts_to_audio(request: SynthesisRequest):
 
             speaker_wav = XTTS.get_speaker_path(request.speaker_wav)
 
+            # We can interupt and play again
+            if stream.is_playing():
+                stream.stop()
+                time.sleep(2)
+                stream = TextToAudioStream(engine)
+
             engine.set_voice(speaker_wav)
             engine.language = request.language.lower()
-
+  
+            
             # Start streaming, works only on your local computer.
-
+            # stream = TextToAudioStream(engine)
             stream.feed(request.text)
-            stream.play()
+            stream.play_async()
 
             # It's a hack, just send 1 second of silence so that there is no sillyTavern error.
             this_dir = Path(__file__).parent.resolve()
