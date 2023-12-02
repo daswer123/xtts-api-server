@@ -55,9 +55,9 @@ def check_tts_version():
         tts_version = metadata.version("tts")
         # print(f"[XTTS] TTS version: {tts_version}")
 
-        if version.parse(tts_version) < version.parse("0.21.1"):
+        if version.parse(tts_version) < version.parse("0.21.2"):
             upgrade_tts_package()
-            # print("[XTTS] TTS version is too old. Please upgrade to version 0.21.1 or later.")
+            # print("[XTTS] TTS version is too old. Please upgrade to version 0.21.2 or later.")
             # print("[XTTS] pip install --upgrade tts")
         # else:
             # logger.info("TTS version is up to date.")

@@ -225,7 +225,7 @@ class TTSWrapper:
                 text=text,
                 speaker_wav=speaker_wav,
                 language=language,
-                file_path=output_file  # Assuming tts_to_file takes 'file_path' as an argument.
+                file_path=output_file,
         )
     
     def get_speaker_path(self,speaker_name_or_path):
