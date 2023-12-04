@@ -19,6 +19,7 @@ from xtts_api_server.RealtimeTTS import TextToAudioStream, CoquiEngine
 from xtts_api_server.modeldownloader import check_stream2sentence_version
 
 # Default Folders , you can change them via API
+DEVICE = os.getenv('DEVICE',"cuda")
 OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
 SPEAKER_FOLDER = os.getenv('SPEAKER', 'speakers')
 BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
@@ -28,9 +29,10 @@ STREAM_MODE = os.getenv("STREAM_MODE") == 'true'
 STREAM_MODE_IMPROVE = os.getenv("STREAM_MODE_IMPROVE") == 'true'
 MODEL_VERSION = os.getenv("MODEL_VERSION","2.0.2")
 
+
 # Create an instance of the TTSWrapper class and server
 app = FastAPI()
-XTTS = TTSWrapper(OUTPUT_FOLDER,SPEAKER_FOLDER,LOWVRAM_MODE,MODEL_SOURCE,MODEL_VERSION)
+XTTS = TTSWrapper(OUTPUT_FOLDER,SPEAKER_FOLDER,LOWVRAM_MODE,MODEL_SOURCE,MODEL_VERSION,DEVICE)
 
 # Create version string
 version_string = ""

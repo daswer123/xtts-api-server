@@ -40,9 +40,10 @@ supported_languages = {
 reversed_supported_languages = {name: code for code, name in supported_languages.items()}
 
 class TTSWrapper:
-    def __init__(self,output_folder = "./output", speaker_folder="./speakers",lowvram = False,model_source = "local",model_version = "2.0.2"):
+    def __init__(self,output_folder = "./output", speaker_folder="./speakers",lowvram = False,model_source = "local",model_version = "2.0.2",device = "cuda"):
 
-        self.device = 'cpu' if lowvram else ("cuda" if torch.cuda.is_available() else "cpu")
+        self.cuda = device # If the user has chosen what to use, we rewrite the value to the value we want to use
+        self.device = 'cpu' if lowvram else (self.cuda if torch.cuda.is_available() else "cpu")
         self.lowvram = lowvram  # Store whether we want to run in low VRAM mode.
 
         self.latents_cache = {} 
@@ -95,7 +96,7 @@ class TTSWrapper:
 
     def switch_model_device(self):
         # We check for lowram and the existence of cuda
-        if self.lowvram and torch.cuda.is_available():
+        if self.lowvram and torch.cuda.is_available() and self.cuda != "cpu":
             with torch.no_grad():
                 if self.device == 'cuda':
                     self.device = "cpu"

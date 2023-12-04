@@ -47,6 +47,7 @@ options:
   -h, --help show this help message and exit
   -hs HOST, --host HOST
   -p PORT, --port PORT
+  -d DEVICE, --device DEVICE `cpu` or `cuda`, you can specify which video card to use, for example, `cuda:0`
   -sf SPEAKER_FOLDER, --speaker_folder The folder where you get the samples for tts
   -o OUTPUT, --output Output folder
   -t TUNNEL_URL, --tunnel URL of tunnel used (e.g: ngrok, localtunnel)
