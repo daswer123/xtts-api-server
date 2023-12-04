@@ -98,10 +98,10 @@ class TTSWrapper:
         # We check for lowram and the existence of cuda
         if self.lowvram and torch.cuda.is_available() and self.cuda != "cpu":
             with torch.no_grad():
-                if self.device == 'cuda':
+                if self.device == self.cuda:
                     self.device = "cpu"
                 else:
-                    self.device = "cuda"
+                    self.device = self.cuda
 
                 self.model.to(self.device)
 
