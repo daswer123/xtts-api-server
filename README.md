@@ -1,13 +1,15 @@
 # A simple FastAPI Server to run XTTSv2
 
-There's a [google collab version](https://colab.research.google.com/drive/1b-X3q5miwYLVMuiH_T73odMO8cbtICEY?usp=sharing) you can use it if your computer is weak.
-You can check out the [guide](https://rentry.org/xtts-api-server-colab-guide)
-
 This project is inspired by [silero-api-server](https://github.com/ouoertheo/silero-api-server) and utilizes [XTTSv2](https://github.com/coqui-ai/TTS).
 
 This server was created for [SillyTavern](https://github.com/SillyTavern/SillyTavern) but you can use it for your needs
 
 Feel free to make PRs or use the code for your own needs
+
+There's a [google collab version](https://colab.research.google.com/drive/1b-X3q5miwYLVMuiH_T73odMO8cbtICEY?usp=sharing) you can use it if your computer is weak.
+You can check out the [guide](https://rentry.org/xtts-api-server-colab-guide)
+
+If you want to get a high-quality voice clone, I advise you to use [webui for fine-tuning xtts](https://github.com/daswer123/xtts-finetune-webui)
 
 ## Changelog
 
