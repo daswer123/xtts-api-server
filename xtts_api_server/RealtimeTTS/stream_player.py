@@ -2,11 +2,13 @@
 Stream management
 """
 
+from pydub import AudioSegment
 import threading
 import pyaudio
 import logging
 import queue
 import time
+import io
 
 
 class AudioConfiguration:
@@ -42,7 +44,19 @@ class AudioStream:
 
     def open_stream(self):
         """Opens an audio stream."""
-        self.stream = self.pyaudio_instance.open(format=self.config.format, channels=self.config.channels, rate=self.config.rate, output=True)
+
+        # check for mpeg format
+        pyChannels = self.config.channels
+        pySampleRate = self.config.rate
+
+        if self.config.format == pyaudio.paCustomFormat:
+            pyFormat = self.pyaudio_instance.get_format_from_width(2)
+            logging.debug(f"Opening stream for mpeg audio chunks, pyFormat: {pyFormat}, pyChannels: {pyChannels}, pySampleRate: {pySampleRate}")
+        else:
+            pyFormat = self.config.format
+            logging.debug(f"Opening stream for wave audio chunks, pyFormat: {pyFormat}, pyChannels: {pyChannels}, pySampleRate: {pySampleRate}")
+
+        self.stream = self.pyaudio_instance.open(format=pyFormat, channels=pyChannels, rate=pySampleRate, output=True)
 
     def start_stream(self):
         """Starts the audio stream."""
@@ -137,7 +151,7 @@ class StreamPlayer:
     Manages audio playback operations such as start, stop, pause, and resume.
     """
 
-    def __init__(self, audio_buffer: queue.Queue, config: AudioConfiguration, on_playback_start=None, on_playback_stop=None, on_audio_chunk=None):
+    def __init__(self, audio_buffer: queue.Queue, config: AudioConfiguration, on_playback_start=None, on_playback_stop=None, on_audio_chunk=None, muted = False):
         """
         Args:
             audio_buffer (queue.Queue): Queue to be used as the audio buffer.
@@ -155,6 +169,7 @@ class StreamPlayer:
         self.on_playback_stop = on_playback_stop
         self.on_audio_chunk = on_audio_chunk
         self.first_chunk_played = False
+        self.muted = muted
 
     def _play_chunk(self, chunk):
         """
@@ -163,12 +178,22 @@ class StreamPlayer:
         Args:
             chunk: Chunk of audio data to be played.
         """
+
+        # handle mpeg
+        if self.audio_stream.config.format == pyaudio.paCustomFormat:
+
+            # convert to pcm using pydub
+            segment = AudioSegment.from_file(io.BytesIO(chunk), format="mp3")
+            chunk = segment.raw_data
+
         sub_chunk_size = 1024
         
         for i in range(0, len(chunk), sub_chunk_size):
             sub_chunk = chunk[i:i + sub_chunk_size]
 
-            self.audio_stream.stream.write(sub_chunk)
+            if not self.muted:
+                self.audio_stream.stream.write(sub_chunk)
+
             if self.on_audio_chunk:
                 self.on_audio_chunk(sub_chunk)
 
@@ -251,3 +276,7 @@ class StreamPlayer:
     def resume(self):
         """Resumes paused audio playback."""
         self.pause_event.clear()
+
+    def mute(self, muted: bool = True):
+        """Mutes audio playback."""
+        self.muted = muted

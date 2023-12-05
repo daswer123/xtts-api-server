@@ -68,7 +68,7 @@ def check_tts_version():
 def check_stream2sentence_version():
     try:
         tts_version = metadata.version("stream2sentence")
-        if version.parse(tts_version) < version.parse("0.2.0"):
+        if version.parse(tts_version) < version.parse("0.2.2"):
             upgrade_stream2sentence_package()
     except metadata.PackageNotFoundError:
         print("stream2sentence is not installed.")

@@ -139,7 +139,7 @@ class CoquiEngine(BaseEngine):
                 filename_wav = filename + "wav"
             elif filename.endswith(".wav"):
                 filename_json = filename[:-3] + "json"
-                filename = filename[:-4]
+                filename = filename[:-3]
                 filename_wav = filename + "wav"
             else:
                 filename_json = filename + ".json"
@@ -270,7 +270,11 @@ class CoquiEngine(BaseEngine):
                     gpt_cond_latent, speaker_embedding = get_conditioning_latents(new_wav_path)
                     conn.send(('success', 'Reference updated successfully'))
 
-                if command == 'shutdown':
+                elif command == 'set_speed':
+                    speed = data['speed']
+                    conn.send(('success', 'Speed updated successfully'))
+
+                elif command == 'shutdown':
                     logging.info('Shutdown command received. Exiting worker process.')
                     conn.send(('shutdown', 'shutdown'))
                     break  # This exits the loop, effectively stopping the worker process.
@@ -360,7 +364,22 @@ class CoquiEngine(BaseEngine):
             logging.error(f'Error updating reference WAV: {cloning_reference_wav}')
 
         return status, result
+    
+    def set_speed(self, speed: float):
+        """
+        Sets the speed of the speech synthesis.
+        """
+        self.send_command('set_speed', {'speed': speed})
 
+        # Wait for the response from the worker process
+        status, result = self.parent_synthesize_pipe.recv()
+        if status == 'success':
+            logging.info('Speed updated successfully')
+        else:
+            logging.error(f'Error updating speed')
+
+        return status, result
+    
     def get_stream_info(self):
         """
         Returns the PyAudio stream configuration information suitable for Coqui Engine.
@@ -489,6 +508,7 @@ class CoquiEngine(BaseEngine):
         for file_name, url in files.items():
             file_path = os.path.join(model_folder, file_name)
             if not os.path.exists(file_path):
+                logging.info(f"Downloading {file_name}...")
                 logger.info(f"Downloading {file_name} for Model v{model_name}...")
                 CoquiEngine.download_file(url, file_path)
                 # r = requests.get(url, allow_redirects=True)
