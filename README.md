@@ -96,7 +96,9 @@ API Docs can be accessed from [http://localhost:8020/docs](http://localhost:8020
 
 # Voice Samples
 
-You can find the sample in this repository, also by default samples will be saved to `/output/output.wav` or you can change this, more details in the API documentation
+You can find the sample in this repository more details in the API documentation
+
+[erew123](https://github.com/erew123) put together a pack of 40+ votes, you can download to try them out [here](https://filebin.net/t97nd69ac7qm2rsf)
 
 # Selecting Folder
 
