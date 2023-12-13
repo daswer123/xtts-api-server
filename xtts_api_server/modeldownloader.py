@@ -32,7 +32,7 @@ def download_file(url, destination):
 def upgrade_tts_package():
     try:
         logger.warning("TTS version is outdated, attempting to upgrade TTS...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install","-q", "--upgrade", "tts"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install","-q", "--force-reinstall","--no-deps", "tts==0.21.3"])
         logger.info("TTS has been successfully upgraded ")
     except Exception as e:
         logger.error(f"An error occurred while upgrading TTS: {e}")
@@ -55,7 +55,7 @@ def check_tts_version():
         tts_version = metadata.version("tts")
         # print(f"[XTTS] TTS version: {tts_version}")
 
-        if version.parse(tts_version) < version.parse("0.21.2"):
+        if version.parse(tts_version) != version.parse("0.21.3"):
             upgrade_tts_package()
             # print("[XTTS] TTS version is too old. Please upgrade to version 0.21.2 or later.")
             # print("[XTTS] pip install --upgrade tts")

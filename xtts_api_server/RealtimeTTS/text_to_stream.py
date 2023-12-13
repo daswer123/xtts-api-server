@@ -56,6 +56,7 @@ class TextToAudioStream:
         self.abort_events = []
         self.tokenizer = tokenizer
         self.language = language
+        self.player = None
 
         self._create_iterators()
 
@@ -105,6 +106,7 @@ class TextToAudioStream:
             self.player = StreamPlayer(self.engine.queue, AudioConfiguration(format, channels, rate), on_playback_start=self._on_audio_stream_start)
         else:
             self.engine.on_playback_start = self._on_audio_stream_start
+            self.player = None
 
         logging.info(f"loaded engine {self.engine.engine_name}")
 
@@ -197,7 +199,9 @@ class TextToAudioStream:
         self.stream_running = True
         abort_event = threading.Event()
         self.abort_events.append(abort_event)
-        self.player.mute(muted)
+
+        if self.player:
+            self.player.mute(muted)
 
         self.output_wavfile = output_wavfile
         self.chunk_callback = on_audio_chunk
@@ -320,21 +324,23 @@ class TextToAudioStream:
                 print (f"Error: {e}")
 
             finally:
-                self.abort_events.remove(abort_event)
-                self.player.stop()
+                try:
+                   
+                    self.player.stop()
 
-                self.stream_running = False
-                logging.info("stream stop")
+                    self.abort_events.remove(abort_event)
+                    self.stream_running = False
+                    logging.info("stream stop")
 
-                if output_wavfile and self.wf:
-                    self.wf.close()
-                    self.wf = None
+                    self.output_wavfile = None
+                    self.chunk_callback = None
 
-                self.output_wavfile = None
-                self.chunk_callback = None
-
-                if reset_generated_text and self.on_audio_stream_stop:
-                    self.on_audio_stream_stop()
+                    if reset_generated_text and self.on_audio_stream_stop:
+                        self.on_audio_stream_stop()
+                finally:
+                    if output_wavfile and self.wf:
+                        self.wf.close()
+                        self.wf = None
 
             if self.stream_running and len(self.char_iter.items) > 0 and self.char_iter.iterated_text == "":
                 # new text was feeded while playing audio but after the last character was processed
