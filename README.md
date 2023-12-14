@@ -7,9 +7,10 @@ This server was created for [SillyTavern](https://github.com/SillyTavern/SillyTa
 Feel free to make PRs or use the code for your own needs
 
 There's a [google collab version](https://colab.research.google.com/drive/1b-X3q5miwYLVMuiH_T73odMO8cbtICEY?usp=sharing) you can use it if your computer is weak.
-You can check out the [guide](https://rentry.org/xtts-api-server-colab-guide)
 
-If you want to get a high-quality voice clone, I advise you to use [webui for fine-tuning xtts](https://github.com/daswer123/xtts-finetune-webui)
+If you want to get a high-quality voice clone, I advise you to use [webui for fine-tuning xtts](https://github.com/daswer123/xtts-webui)
+
+If you are looking for an option for normal XTTS use look here [https://github.com/daswer123/xtts-webui](https://github.com/daswer123/xtts-webui)
 
 ## Changelog
 
