@@ -9,7 +9,7 @@ parser.add_argument("-d", "--device", default="cuda", type=str, help="Device tha
 parser.add_argument("-sf", "--speaker_folder", default="speakers/", type=str, help="The folder where you get the samples for tts")
 parser.add_argument("-o", "--output", default="output/", type=str, help="Output folder")
 parser.add_argument("-t", "--tunnel", default="", type=str, help="URL of tunnel used (e.g: ngrok, localtunnel)")
-parser.add_argument("-ms", "--model-source", default="apiManual", choices=["api","apiManual", "local"],
+parser.add_argument("-ms", "--model-source", default="local", choices=["api","apiManual", "local"],
                     help="Define the model source: 'api' for latest version from repository, apiManual for 2.0.2 model and api inference or 'local' for using local inference and model v2.0.2.")
 parser.add_argument("-v", "--version", default="2.0.2", type=str, help="You can specify which version of xtts to use,This version will be used everywhere in local, api and apiManual.")
 parser.add_argument("--lowvram", action='store_true', help="Enable low vram mode which switches the model to RAM when not actively processing.")

@@ -51,6 +51,8 @@ class TTSWrapper:
         self.model_source = model_source
         self.model_version = model_version
 
+        self.deepspeed = deepspeed
+
         self.speaker_folder = speaker_folder
         self.output_folder = output_folder
         
