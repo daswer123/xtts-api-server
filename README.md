@@ -42,7 +42,7 @@ pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 --index-url https://downl
 `python -m xtts_api_server` will run on default ip and port (localhost:8020)
 
 ```
-usage: xtts_api_server [-h] [-hs HOST] [-p PORT] [-sf SPEAKER_FOLDER] [-o OUTPUT] [-t TUNNEL_URL] [-ms MODEL_SOURCE] [--lowvram] [--streaming-mode]
+usage: xtts_api_server [-h] [-hs HOST] [-p PORT] [-sf SPEAKER_FOLDER] [-o OUTPUT] [-t TUNNEL_URL] [-ms MODEL_SOURCE] [--lowvram] [--streaming-mode] [--stream-play-sync]
 
 Run XTTSv2 within a FastAPI application
 
@@ -59,6 +59,7 @@ options:
   --lowvram The mode in which the model will be stored in RAM and when the processing will move to VRAM, the difference in speed is small
   --streaming-mode Enables streaming mode, currently has certain limitations, as described below.
   --streaming-mode-improve Enables streaming mode, includes an improved streaming mode that consumes 2gb more VRAM and uses a better tokenizer and more context.
+  --stream-play-sync Additional flag for streaming mod that allows you to play all audio one at a time without interruption
 ```
 
 If you want your host to listen, use -hs 0.0.0.0
@@ -90,6 +91,8 @@ Now, about the limitations
 You can specify the version of the XTTS model by using the `-v` flag.
 
 Improved streaming mode is suitable for complex languages such as Chinese, Japanese, Hindi or if you want the language engine to take more information into account when processing speech.
+
+`--stream-play-sync` flag - Allows you to play all messages in queue order, useful if you use group chats. In SillyTavern you need to turn off streaming to work correctly
 
 # API Docs
 

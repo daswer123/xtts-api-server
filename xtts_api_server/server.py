@@ -24,10 +24,13 @@ OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
 SPEAKER_FOLDER = os.getenv('SPEAKER', 'speakers')
 BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
 MODEL_SOURCE = os.getenv("MODEL_SOURCE", "apiManual")
+MODEL_VERSION = os.getenv("MODEL_VERSION","2.0.2")
 LOWVRAM_MODE = os.getenv("LOWVRAM_MODE") == 'true'
+# STREAMING VARS
 STREAM_MODE = os.getenv("STREAM_MODE") == 'true'
 STREAM_MODE_IMPROVE = os.getenv("STREAM_MODE_IMPROVE") == 'true'
-MODEL_VERSION = os.getenv("MODEL_VERSION","2.0.2")
+STREAM_PLAY_SYNC = os.getenv("STREAM_PLAY_SYNC") == 'true'
+
 
 
 # Create an instance of the TTSWrapper class and server
@@ -74,6 +77,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Help funcs
+def play_stream(stream):
+  if STREAM_MODE_IMPROVE:
+    # Here we define common arguments in a dictionary for DRY principle
+    play_args = {
+        'minimum_sentence_length': 2,
+        'minimum_first_fragment_length': 2,
+        'tokenizer': "stanza",
+        'language': language,
+        'context_size': 2
+    }
+    if STREAM_PLAY_SYNC:
+        # Play synchronously
+        stream.play(**play_args)
+    else:
+        # Play asynchronously
+        stream.play_async(**play_args)
+  else:
+    # If not improve mode just call the appropriate method based on sync_play flag.
+    if STREAM_PLAY_SYNC:
+      stream.play()
+    else:
+      stream.play_async()
 
 class OutputFolderRequest(BaseModel):
     output_folder: str
@@ -153,8 +181,7 @@ async def tts_to_audio(request: SynthesisRequest):
             speaker_wav = XTTS.get_speaker_path(request.speaker_wav)
             language = request.language[0:2]
 
-            # We can interupt and play again
-            if stream.is_playing():
+            if stream.is_playing() and not STREAM_PLAY_SYNC:
                 stream.stop()
                 stream = TextToAudioStream(engine)
 
@@ -163,17 +190,7 @@ async def tts_to_audio(request: SynthesisRequest):
            
             # Start streaming, works only on your local computer.
             stream.feed(request.text)
-
-            if STREAM_MODE_IMPROVE:
-              stream.play_async(
-                minimum_sentence_length = 2,
-                minimum_first_fragment_length = 2, 
-                tokenizer="stanza", 
-                language=language,
-                context_size=2
-            ) 
-            else:
-                stream.play_async()
+            play_stream(stream)
 
             # It's a hack, just send 1 second of silence so that there is no sillyTavern error.
             this_dir = Path(__file__).parent.resolve()
