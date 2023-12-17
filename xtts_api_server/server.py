@@ -23,7 +23,7 @@ DEVICE = os.getenv('DEVICE',"cuda")
 OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
 SPEAKER_FOLDER = os.getenv('SPEAKER', 'speakers')
 BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
-MODEL_SOURCE = os.getenv("MODEL_SOURCE", "apiManual")
+MODEL_SOURCE = os.getenv("MODEL_SOURCE", "local")
 MODEL_VERSION = os.getenv("MODEL_VERSION","2.0.2")
 LOWVRAM_MODE = os.getenv("LOWVRAM_MODE") == 'true'
 DEEPSPEED = os.getenv("DEEPSPEED") == 'true'
@@ -35,6 +35,9 @@ STREAM_PLAY_SYNC = os.getenv("STREAM_PLAY_SYNC") == 'true'
 if(DEEPSPEED):
   install_deepspeed_based_on_python_version()
 
+if(not MODEL_SOURCE == "local" and DEEPSPEED and not STREAM_MODE and not STREAM_MODE_IMPROVE):
+    logger.info("You are using deepspeed, it only works with model source local, the model source is automatically changed to local")
+    MODEL_SOURCE = "local"
 
 # Create an instance of the TTSWrapper class and server
 app = FastAPI()
