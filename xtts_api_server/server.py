@@ -16,7 +16,7 @@ from pathlib import Path
 
 from xtts_api_server.tts_funcs import TTSWrapper,supported_languages
 from xtts_api_server.RealtimeTTS import TextToAudioStream, CoquiEngine
-from xtts_api_server.modeldownloader import check_stream2sentence_version
+from xtts_api_server.modeldownloader import check_stream2sentence_version,install_deepspeed_based_on_python_version
 
 # Default Folders , you can change them via API
 DEVICE = os.getenv('DEVICE',"cuda")
@@ -26,16 +26,19 @@ BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
 MODEL_SOURCE = os.getenv("MODEL_SOURCE", "apiManual")
 MODEL_VERSION = os.getenv("MODEL_VERSION","2.0.2")
 LOWVRAM_MODE = os.getenv("LOWVRAM_MODE") == 'true'
+DEEPSPEED = os.getenv("DEEPSPEED") == 'true'
 # STREAMING VARS
 STREAM_MODE = os.getenv("STREAM_MODE") == 'true'
 STREAM_MODE_IMPROVE = os.getenv("STREAM_MODE_IMPROVE") == 'true'
 STREAM_PLAY_SYNC = os.getenv("STREAM_PLAY_SYNC") == 'true'
 
+if(DEEPSPEED):
+  install_deepspeed_based_on_python_version()
 
 
 # Create an instance of the TTSWrapper class and server
 app = FastAPI()
-XTTS = TTSWrapper(OUTPUT_FOLDER,SPEAKER_FOLDER,LOWVRAM_MODE,MODEL_SOURCE,MODEL_VERSION,DEVICE)
+XTTS = TTSWrapper(OUTPUT_FOLDER,SPEAKER_FOLDER,LOWVRAM_MODE,MODEL_SOURCE,MODEL_VERSION,DEVICE,DEEPSPEED)
 
 # Create version string
 version_string = ""
@@ -63,7 +66,7 @@ if STREAM_MODE or STREAM_MODE_IMPROVE:
     this_dir = Path(__file__).parent.resolve()
     model_path = this_dir / "models"
     
-    engine = CoquiEngine(specific_model=MODEL_VERSION,local_models_path=str(model_path))
+    engine = CoquiEngine(specific_model=MODEL_VERSION,use_deepspeed=DEEPSPEED,local_models_path=str(model_path))
     stream = TextToAudioStream(engine)
 else:
   XTTS.load_model() 
@@ -80,7 +83,7 @@ app.add_middleware(
 
 
 # Help funcs
-def play_stream(stream):
+def play_stream(stream,language):
   if STREAM_MODE_IMPROVE:
     # Here we define common arguments in a dictionary for DRY principle
     play_args = {
@@ -190,7 +193,7 @@ async def tts_to_audio(request: SynthesisRequest):
            
             # Start streaming, works only on your local computer.
             stream.feed(request.text)
-            play_stream(stream)
+            play_stream(stream,language)
 
             # It's a hack, just send 1 second of silence so that there is no sillyTavern error.
             this_dir = Path(__file__).parent.resolve()

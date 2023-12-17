@@ -40,7 +40,7 @@ supported_languages = {
 reversed_supported_languages = {name: code for code, name in supported_languages.items()}
 
 class TTSWrapper:
-    def __init__(self,output_folder = "./output", speaker_folder="./speakers",lowvram = False,model_source = "local",model_version = "2.0.2",device = "cuda"):
+    def __init__(self,output_folder = "./output", speaker_folder="./speakers",lowvram = False,model_source = "local",model_version = "2.0.2",device = "cuda",deepspeed = False):
 
         self.cuda = device # If the user has chosen what to use, we rewrite the value to the value we want to use
         self.device = 'cpu' if lowvram else (self.cuda if torch.cuda.is_available() else "cpu")
@@ -91,7 +91,7 @@ class TTSWrapper:
         config.load_json(str(config_path))
         
         self.model = Xtts.init_from_config(config)
-        self.model.load_checkpoint(config, checkpoint_dir=str(checkpoint_dir))
+        self.model.load_checkpoint(config,use_deepspeed=self.deepspeed, checkpoint_dir=str(checkpoint_dir))
         self.model.to(self.device)
 
     def switch_model_device(self):
@@ -275,6 +275,8 @@ class TTSWrapper:
 
         except Exception as e:
             raise e  # Propagate exceptions for endpoint handling.
+
+        
 
 
 

@@ -42,7 +42,7 @@ pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 --index-url https://downl
 `python -m xtts_api_server` will run on default ip and port (localhost:8020)
 
 ```
-usage: xtts_api_server [-h] [-hs HOST] [-p PORT] [-sf SPEAKER_FOLDER] [-o OUTPUT] [-t TUNNEL_URL] [-ms MODEL_SOURCE] [--lowvram] [--streaming-mode] [--stream-play-sync]
+usage: xtts_api_server [-h] [-hs HOST] [-p PORT] [-sf SPEAKER_FOLDER] [-o OUTPUT] [-t TUNNEL_URL] [-ms MODEL_SOURCE] [--lowvram] [--deepspeed] [--streaming-mode] [--stream-play-sync]
 
 Run XTTSv2 within a FastAPI application
 
@@ -57,6 +57,7 @@ options:
   -ms MODEL_SOURCE, --model-source ["api","apiManual","local"]
   -v MODEL_VERSION, --version You can choose any version of the model, keep in mind that if you choose model-source api, only the latest version will be loaded
   --lowvram The mode in which the model will be stored in RAM and when the processing will move to VRAM, the difference in speed is small
+  --deepspeed allows you to speed up processing by several times, automatically downloads the necessary libraries
   --streaming-mode Enables streaming mode, currently has certain limitations, as described below.
   --streaming-mode-improve Enables streaming mode, includes an improved streaming mode that consumes 2gb more VRAM and uses a better tokenizer and more context.
   --stream-play-sync Additional flag for streaming mod that allows you to play all audio one at a time without interruption
