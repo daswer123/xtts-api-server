@@ -286,7 +286,7 @@ class TTSWrapper:
             wav_file = f"{full_path}.wav"
             if os.path.isdir(full_path):
                 # multi-sample speaker
-                speaker_wav = self.get_wav_files(full_path)
+                speaker_wav = [ os.path.join(full_path,wav) for wav in self.get_wav_files(full_path) ]
                 if len(speaker_wav) == 0:
                     raise ValueError(f"no wav files found in {full_path}")
             elif os.path.isfile(wav_file):
