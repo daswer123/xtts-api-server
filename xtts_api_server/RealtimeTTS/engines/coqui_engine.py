@@ -401,7 +401,7 @@ class CoquiEngine(BaseEngine):
         message = {'command': command, 'data': data}
         self.parent_synthesize_pipe.send(message)            
             
-    def set_cloning_reference(self, cloning_reference_wav: str):
+    def set_cloning_reference(self, cloning_reference_wav: Union[str, List[str]]):
         """
         Send an 'update_reference' command and wait for a response.
         """
@@ -594,7 +594,7 @@ class CoquiEngine(BaseEngine):
 
         return voice_file_names 
     
-    def set_voice(self, voice: str):
+    def set_voice(self, voice: Union[str, List[str]]):
         """
         Sets the voice to be used for speech synthesis.
         """

@@ -147,7 +147,7 @@ def get_folders():
     output_folder = XTTS.output_folder
     return {"speaker_folder": speaker_folder, "output_folder": output_folder}
 
-@app.get("/sample/{file_name}")
+@app.get("/sample/{file_name:path}")
 def get_sample(file_name: str):
     file_path = os.path.join(XTTS.speaker_folder, file_name)
     if os.path.isfile(file_path):
@@ -184,7 +184,7 @@ async def tts_to_audio(request: SynthesisRequest):
                 raise HTTPException(status_code=400,
                                     detail="Language code sent is either unsupported or misspelled.")
 
-            speaker_wav = XTTS.get_speaker_path(request.speaker_wav)
+            speaker_wav = XTTS.get_speaker_wav(request.speaker_wav)
             language = request.language[0:2]
 
             if stream.is_playing() and not STREAM_PLAY_SYNC:
