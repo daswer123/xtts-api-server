@@ -28,8 +28,7 @@ This will install all the necessary dependencies, including a **CPU support only
 
 I recommend that you install the **GPU version** to improve processing speed ( up to 3 times faster )
 
-Installation into virtual environment on **Windows** with **GPU support**:
-
+### Windows
 ```bash
 python -m venv venv
 venv\Scripts\activate
@@ -37,9 +36,40 @@ pip install xtts-api-server
 pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 --index-url https://download.pytorch.org/whl/cu118
 ```
 
+### Linux
+```bash
+python -m venv venv
+source venv\Scripts\activate
+pip install xtts-api-server
+pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 --index-url https://download.pytorch.org/whl/cu118
+```
+
+# Use Docker image with Docker Compose
+
+A Dockerfile is provided to build a Docker image, and a docker-compose.yml file is provided to run the server with Docker Compose as a service.
+
+You will need to setup the env variables by copying the .env.example file to .env and filling in the values.
+If you want to use your own speakers, you can put it in `example` folder before building the image.
+The example folder will be copied to the container and the server will use it as a speaker folder.
+
+You can build the image with the following command:
+
+```bash
+cd docker
+docker compose build
+```
+
+Then you can run the server with the following command:
+
+```bash
+docker compose up # or with -d to run in background
+```
+
 ## Starting Server
 
 `python -m xtts_api_server` will run on default ip and port (localhost:8020)
+
+Use the `--deepspeed` flag to process the result fast ( 2-3x acceleration )
 
 ```
 usage: xtts_api_server [-h] [-hs HOST] [-p PORT] [-sf SPEAKER_FOLDER] [-o OUTPUT] [-t TUNNEL_URL] [-ms MODEL_SOURCE] [--lowvram] [--deepspeed] [--streaming-mode] [--stream-play-sync]
@@ -99,19 +129,13 @@ Improved streaming mode is suitable for complex languages such as Chinese, Japan
 
 API Docs can be accessed from [http://localhost:8020/docs](http://localhost:8020/docs)
 
-# Voice Samples
+# How to add speaker
 
-You can find the sample in this repository more details in the API documentation
-
-[erew123](https://github.com/erew123) put together a pack of 40+ votes, you can download to try them out [here](https://filebin.net/t97nd69ac7qm2rsf)
+By default the `speakers` folder should appear in the folder, you need to put there the wav file with the voice sample, you can also create a folder and put there several voice samples, this will give more accurate results
 
 # Selecting Folder
 
 You can change the folders for speakers and the folder for output via the API.
-
-# Get Speakers
-
-Once you have at least one file in your speakers folder, you can get its name via API and then you only need to specify the file name.
 
 # Note on creating samples for quality voice cloning
 
@@ -135,28 +159,8 @@ The following post is a quote by user [Material1276 from reddit](https://www.red
 >
 > Using AI generated audio clips may introduce unwanted sounds as its already a copy/simulation of a voice, though, this would need testing.
 
-# Use Docker image with Docker Compose
-
-A Dockerfile is provided to build a Docker image, and a docker-compose.yml file is provided to run the server with Docker Compose as a service.
-
-You will need to setup the env variables by copying the .env.example file to .env and filling in the values.
-If you want to use your own speakers, you can put it in `example` folder before building the image.
-The example folder will be copied to the container and the server will use it as a speaker folder.
-
-You can build the image with the following command:
-
-```bash
-cd docker
-docker compose build
-```
-
-Then you can run the server with the following command:
-
-```bash
-docker compose up # or with -d to run in background
-```
-
 # Credit
 
 1. Thanks to the author **Kolja Beigel** for the repository [RealtimeTTS](https://github.com/KoljaB/RealtimeTTS) , I took some of its code for my project.
 2. Thanks **[erew123](https://github.com/oobabooga/text-generation-webui/issues/4712#issuecomment-1825593734)** for the note about creating samples and the code to download the models
+3. Thanks **lendot** for helping to fix the multiprocessing bug and adding code to use multiple samples for speakers
