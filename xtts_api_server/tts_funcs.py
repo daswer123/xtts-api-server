@@ -119,7 +119,7 @@ class TTSWrapper:
         return self.latents_cache[speaker_name]
 
     def create_latents_for_all(self):
-        speakers_list = self.get_speakers()
+        speakers_list = self._get_speakers()
 
         for speaker in speakers_list:
             self.get_or_create_latents(speaker['speaker_name'],speaker['speaker_wav'])
@@ -159,7 +159,7 @@ class TTSWrapper:
         wav_files = [f for f in os.listdir(directory) if f.endswith('.wav')]
         return wav_files
 
-    def get_speakers(self):
+    def _get_speakers(self):
         """
         Gets info on all the speakers.
 
@@ -196,6 +196,11 @@ class TTSWrapper:
                         })
         return speakers
 
+    def get_speakers(self):
+        """ Gets available speakers """
+        speakers = [ s['speaker_name'] for s in self._get_speakers() ] 
+        return speakers
+
     # Special format for SillyTavern
     def get_speakers_special(self):
         BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
@@ -203,7 +208,7 @@ class TTSWrapper:
 
         speakers_special = []
 
-        speakers = self.get_speakers()
+        speakers = self._get_speakers()
 
         for speaker in speakers:
             if TUNNEL_URL == "":
