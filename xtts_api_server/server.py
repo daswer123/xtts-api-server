@@ -24,9 +24,11 @@ OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
 SPEAKER_FOLDER = os.getenv('SPEAKER', 'speakers')
 BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
 MODEL_SOURCE = os.getenv("MODEL_SOURCE", "local")
-MODEL_VERSION = os.getenv("MODEL_VERSION","2.0.2")
+MODEL_VERSION = os.getenv("MODEL_VERSION","v2.0.2")
 LOWVRAM_MODE = os.getenv("LOWVRAM_MODE") == 'true'
 DEEPSPEED = os.getenv("DEEPSPEED") == 'true'
+USE_CACHE = os.getenv("USE_CACHE") == 'true'
+
 # STREAMING VARS
 STREAM_MODE = os.getenv("STREAM_MODE") == 'true'
 STREAM_MODE_IMPROVE = os.getenv("STREAM_MODE_IMPROVE") == 'true'
@@ -41,17 +43,14 @@ if(not MODEL_SOURCE == "local" and DEEPSPEED and not STREAM_MODE and not STREAM_
 
 # Create an instance of the TTSWrapper class and server
 app = FastAPI()
-XTTS = TTSWrapper(OUTPUT_FOLDER,SPEAKER_FOLDER,LOWVRAM_MODE,MODEL_SOURCE,MODEL_VERSION,DEVICE,DEEPSPEED)
+XTTS = TTSWrapper(OUTPUT_FOLDER,SPEAKER_FOLDER,LOWVRAM_MODE,MODEL_SOURCE,MODEL_VERSION,DEVICE,DEEPSPEED,USE_CACHE)
 
 # Create version string
 version_string = ""
-if MODEL_SOURCE == "api":
+if MODEL_SOURCE == "api" or MODEL_VERSION == "main":
     version_string = "lastest"
 else:
-    version_string = "v"+MODEL_VERSION
-
-if MODEL_SOURCE == "api" and MODEL_SOURCE != "2.0.2":
-    logger.warning("Attention you have specified flag -v but you have selected --model-source api, please change --model-souce to apiManual or local to use the specified version, otherwise the latest version of the model will be loaded.")
+    version_string = MODEL_VERSION
 
 # Load model
 # logger.info(f"The model {version_string} starts to load,wait until it loads")
@@ -73,6 +72,9 @@ if STREAM_MODE or STREAM_MODE_IMPROVE:
     stream = TextToAudioStream(engine)
 else:
   XTTS.load_model() 
+
+if USE_CACHE:
+    logger.info("You have enabled caching, this option enables caching of results, your results will be saved and if there is a repeat request, you will get a file instead of generation")
 
 # Add CORS middleware 
 origins = ["*"]

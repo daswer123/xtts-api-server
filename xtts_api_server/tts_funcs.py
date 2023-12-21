@@ -12,9 +12,11 @@ from pathlib import Path
 from xtts_api_server.modeldownloader import download_model,check_tts_version
 
 from loguru import logger
+from datetime import datetime
 import os
 import time 
 import re
+import json
 
 # List of supported language codes
 supported_languages = {
@@ -37,10 +39,12 @@ supported_languages = {
     "hi":"Hindi"
 }
 
+official_model_list = ["v2.0.0","v2.0.1","v2.0.2","v2.0.3","main"]
+
 reversed_supported_languages = {name: code for code, name in supported_languages.items()}
 
 class TTSWrapper:
-    def __init__(self,output_folder = "./output", speaker_folder="./speakers",lowvram = False,model_source = "local",model_version = "2.0.2",device = "cuda",deepspeed = False):
+    def __init__(self,output_folder = "./output", speaker_folder="./speakers",lowvram = False,model_source = "local",model_version = "2.0.2",device = "cuda",deepspeed = False,enable_cache_results = True):
 
         self.cuda = device # If the user has chosen what to use, we rewrite the value to the value we want to use
         self.device = 'cpu' if lowvram else (self.cuda if torch.cuda.is_available() else "cpu")
@@ -55,10 +59,60 @@ class TTSWrapper:
 
         self.speaker_folder = speaker_folder
         self.output_folder = output_folder
-        
+
         self.create_directories()
         check_tts_version()
-    
+
+        self.enable_cache_results = enable_cache_results
+        self.cache_file_path = os.path.join(output_folder, "cache.json")
+
+        if self.enable_cache_results:
+            # Reset the contents of the cache file at each initialization.
+            with open(self.cache_file_path, 'w') as cache_file:
+                json.dump({}, cache_file)
+
+    # CACHE FUNCS
+    def check_cache(self, text_params):
+        if not self.enable_cache_results:
+            return None
+
+        try:
+            with open(self.cache_file_path) as cache_file:
+                cache_data = json.load(cache_file)
+
+            for entry in cache_data.values():
+                if all(entry[key] == value for key, value in text_params.items()):
+                    return entry['file_name']
+
+            return None
+
+        except FileNotFoundError:
+            return None
+
+    def update_cache(self, text_params, file_name):
+        if not self.enable_cache_results:
+            return None
+        try:
+            # Check if the file exists and its contents before downloading.
+            if os.path.exists(self.cache_file_path) and os.path.getsize(self.cache_file_path) > 0:
+                with open(self.cache_file_path, 'r') as cache_file:
+                    cache_data = json.load(cache_file)
+            else:
+                cache_data = {}  # Initialization of an empty dictionary if the file does not exist or is empty.
+
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            cache_data[timestamp] = {**text_params, 'file_name': file_name}
+
+            with open(self.cache_file_path, 'w') as cache_file:
+                json.dump(cache_data, cache_file)
+
+            logger.info("Cache updated successfully.")
+        except IOError as e:
+            print("I/O error occurred while updating the cache: ", str(e))
+        except json.JSONDecodeError as e:
+            print("JSON decode error occurred while updating the cache: ", str(e))
+            
+    # LOAD FUNCS
     def load_model(self):
         if self.model_source == "api":
             self.model = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
@@ -68,13 +122,19 @@ class TTSWrapper:
             download_model(this_dir,self.model_version)
 
             this_dir = Path(__file__).parent.resolve()
-            config_path = this_dir / 'models' / f'v{self.model_version}' / 'config.json'
-            checkpoint_dir = this_dir / 'models' / f'v{self.model_version}'
+            config_path = this_dir / 'models' / f'{self.model_version}' / 'config.json'
+            checkpoint_dir = this_dir / 'models' / f'{self.model_version}'
 
             self.model = TTS(model_path=checkpoint_dir,config_path=config_path).to(self.device)
 
-        if self.model_source == "local":
-          self.load_local_model()
+        if self.model_source != "api" and self.model_source != "apiManual":
+          is_official_model = False
+          for model in official_model_list:
+            if self.model_version == model:
+              is_official_model = True
+              break
+
+          self.load_local_model(load = is_official_model)
           if self.lowvram == False:
             # Due to the fact that we create latents on the cpu and load them from the cuda we get an error
             logger.info("Pre-create latents for all current speakers")
@@ -82,13 +142,15 @@ class TTSWrapper:
           
         logger.info("Model successfully loaded ")
     
-    def load_local_model(self):
+    def load_local_model(self,load=True):
         this_dir = Path(__file__).parent.resolve()
-        download_model(this_dir,self.model_version)
+
+        if(load == True):
+          download_model(this_dir,self.model_version)
 
         config = XttsConfig()
-        config_path = this_dir / 'models' / f'v{self.model_version}' / 'config.json'
-        checkpoint_dir = this_dir / 'models' / f'v{self.model_version}'
+        config_path = this_dir / 'models' / f'{self.model_version}' / 'config.json'
+        checkpoint_dir = this_dir / 'models' / f'{self.model_version}'
 
         config.load_json(str(config_path))
         
@@ -96,6 +158,7 @@ class TTSWrapper:
         self.model.load_checkpoint(config,use_deepspeed=self.deepspeed, checkpoint_dir=str(checkpoint_dir))
         self.model.to(self.device)
 
+    # LOWVRAM FUNCS
     def switch_model_device(self):
         # We check for lowram and the existence of cuda
         if self.lowvram and torch.cuda.is_available() and self.cuda != "cpu":
@@ -111,6 +174,7 @@ class TTSWrapper:
                 # Clearing the cache to free up VRAM
                 torch.cuda.empty_cache()
 
+    # SPEAKER FUNCS
     def get_or_create_latents(self, speaker_name, speaker_wav):
         if speaker_name not in self.latents_cache:
             logger.info(f"creating latents for {speaker_name}: {speaker_wav}")
@@ -126,6 +190,7 @@ class TTSWrapper:
 
         logger.info(f"Latents created for all {len(speakers_list)} speakers.")
 
+    # DIRICTORIES FUNCS
     def create_directories(self):
         directories = [self.output_folder, self.speaker_folder]
 
@@ -154,6 +219,7 @@ class TTSWrapper:
         else:
             raise ValueError("Provided path is not a valid directory")
 
+    # GET FUNCS
     def get_wav_files(self, directory):
         """ Finds all the wav files in a directory. """
         wav_files = [f for f in os.listdir(directory) if f.endswith('.wav')]
@@ -229,6 +295,7 @@ class TTSWrapper:
     def list_languages(self):
         return reversed_supported_languages
 
+    # GENERATION FUNCS
     def clean_text(self,text):
         # Remove asterisks and line breaks
         text = re.sub(r'[\*\r\n]', '', text)
@@ -297,6 +364,7 @@ class TTSWrapper:
         return speaker_wav
 
 
+    # MAIN FUNC
     def process_tts_to_file(self, text, speaker_name_or_path, language, file_name_or_path="out.wav"):
         try:
             speaker_wav = self.get_speaker_wav(speaker_name_or_path)
@@ -308,8 +376,33 @@ class TTSWrapper:
                 # Only a filename was provided; prepend with output folder.
                 output_file = os.path.join(self.output_folder, file_name_or_path)
 
+            # Check if 'text' is a valid path to a '.txt' file.
+            if os.path.isfile(text) and text.lower().endswith('.txt'):
+                with open(text, 'r', encoding='utf-8') as f:
+                    text = f.read()
+
+            # Generate unic name for cached result
+            if self.enable_cache_results:
+                timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+                file_name_or_path = timestamp + "_cache_" + file_name_or_path
+                output_file = os.path.join(self.output_folder, file_name_or_path)
+
             # Replace double quotes with single, asterisks, carriage returns, and line feeds
             clear_text = self.clean_text(text)
+
+            # Generate a dictionary of the parameters to use for caching.
+            text_params = {
+              'text': clear_text,
+              'speaker_name_or_path': speaker_name_or_path,
+              'language': language
+            }
+
+            # Check if results are already cached.
+            cached_result = self.check_cache(text_params)
+
+            if cached_result is not None:
+                logger.info("Using cached result.")
+                return cached_result  # Return the path to the cached result.
 
             self.switch_model_device() # Load to CUDA if lowram ON
 
@@ -320,6 +413,9 @@ class TTSWrapper:
                 self.api_generation(clear_text,speaker_wav,language,output_file)
             
             self.switch_model_device() # Unload to CPU if lowram ON
+
+            # After generation completes successfully...
+            self.update_cache(text_params,output_file)
             return output_file
 
         except Exception as e:

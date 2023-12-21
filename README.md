@@ -72,7 +72,7 @@ docker compose up # or with -d to run in background
 Use the `--deepspeed` flag to process the result fast ( 2-3x acceleration )
 
 ```
-usage: xtts_api_server [-h] [-hs HOST] [-p PORT] [-sf SPEAKER_FOLDER] [-o OUTPUT] [-t TUNNEL_URL] [-ms MODEL_SOURCE] [--lowvram] [--deepspeed] [--streaming-mode] [--stream-play-sync]
+usage: xtts_api_server [-h] [-hs HOST] [-p PORT] [-sf SPEAKER_FOLDER] [-o OUTPUT] [-t TUNNEL_URL] [-ms MODEL_SOURCE] [--use-cache] [--lowvram] [--deepspeed] [--streaming-mode] [--stream-play-sync]
 
 Run XTTSv2 within a FastAPI application
 
@@ -85,13 +85,18 @@ options:
   -o OUTPUT, --output Output folder
   -t TUNNEL_URL, --tunnel URL of tunnel used (e.g: ngrok, localtunnel)
   -ms MODEL_SOURCE, --model-source ["api","apiManual","local"]
-  -v MODEL_VERSION, --version You can choose any version of the model, keep in mind that if you choose model-source api, only the latest version will be loaded
+  -v MODEL_VERSION, --version You can download the official model or your own model, official version you can find [here](https://huggingface.co/coqui/XTTS-v2/tree/main)  the model version name is the same as the branch name [v2.0.2,v2.0.3, main] etc.
+  --use-cache Enables caching of results, your results will be saved and if there will be a repeated request, you will get a file instead of generation
   --lowvram The mode in which the model will be stored in RAM and when the processing will move to VRAM, the difference in speed is small
   --deepspeed allows you to speed up processing by several times, automatically downloads the necessary libraries
   --streaming-mode Enables streaming mode, currently has certain limitations, as described below.
   --streaming-mode-improve Enables streaming mode, includes an improved streaming mode that consumes 2gb more VRAM and uses a better tokenizer and more context.
   --stream-play-sync Additional flag for streaming mod that allows you to play all audio one at a time without interruption
 ```
+
+You can specify the path to the file as text, then the path counts and the file will be voiced
+
+You can load your own model, for this you need to create a folder in models and load the model with configs, note in the folder should be 3 files `config.json` `vocab.json` `model.pth`
 
 If you want your host to listen, use -hs 0.0.0.0
 
@@ -103,7 +108,7 @@ Model-source defines in which format you want to use xtts:
 2. `apiManual` - loads version 2.0.2 by default, but you can specify the version via the -v flag, model saves into the models folder and uses the `tts_to_file` function from the TTS api
 3. `api` - will load the latest version of the model. The -v flag won't work.
 
-All versions of the XTTSv2 model can be found [here](https://huggingface.co/coqui/XTTS-v2/tree/v2.0.2) in the branches
+All versions of the XTTSv2 model can be found [here](https://huggingface.co/coqui/XTTS-v2/tree/main)  the model version name is the same as the branch name [v2.0.2,v2.0.3, main] etc.
 
 The first time you run or generate, you may need to confirm that you agree to use XTTS.
 

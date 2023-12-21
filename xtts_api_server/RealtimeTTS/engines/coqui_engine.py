@@ -1,3 +1,4 @@
+from xtts_api_server.tts_funcs import official_model_list
 from torch.multiprocessing import Process, Pipe, Event, set_start_method
 from .base_engine import BaseEngine
 from typing import Union, List
@@ -92,7 +93,16 @@ class CoquiEngine(BaseEngine):
             ModelManager().download_model(model_name)
         else:
             logging.info(f"Local XTTS Model: \"{specific_model}\" specified")
-            self.local_model_path = self.download_model(specific_model, local_models_path)
+            is_official_model = False
+            for model in official_model_list:
+              if self.specific_model == model:
+                is_official_model = True
+                break
+
+            if is_official_model:
+              self.local_model_path = self.download_model(specific_model, local_models_path)
+            else:
+              self.local_model_path = os.path.join(local_models_path,specific_model)
 
         self.synthesize_process = Process(target=CoquiEngine._synthesize_worker, args=(child_synthesize_pipe, model_name, cloning_reference_wav, language, self.main_synthesize_ready_event, level, self.speed, thread_count, stream_chunk_size, full_sentences, overlap_wav_len, temperature, length_penalty, repetition_penalty, top_k, top_p, enable_text_splitting, use_mps, self.local_model_path, use_deepspeed, self.voices_path))
         self.synthesize_process.start()
@@ -540,28 +550,29 @@ class CoquiEngine(BaseEngine):
         progress_bar.close()
 
     @staticmethod
-    def download_model(model_name = "2.0.2", local_models_path = None):
+    def download_model(model_name = "v2.0.2", local_models_path = None):
 
         # Creating a unique folder for each model version
         if local_models_path and len(local_models_path) > 0:
-            model_folder = os.path.join(local_models_path, f'v{model_name}')
+            model_folder = os.path.join(local_models_path, f'{model_name}')
             logging.info(f"Local models path: \"{model_folder}\"")
         else:
-            model_folder = os.path.join(os.getcwd(), 'models', f'v{model_name}')
+            model_folder = os.path.join(os.getcwd(), 'models', f'{model_name}')
             logging.info(f"Checking for models within application directory: \"{model_folder}\"")
 
         os.makedirs(model_folder, exist_ok=True)
+        print(model_name)
 
         files = {
-            "config.json": f"https://huggingface.co/coqui/XTTS-v2/raw/v{model_name}/config.json",
-            "model.pth": f"https://huggingface.co/coqui/XTTS-v2/resolve/v{model_name}/model.pth?download=true",
-            "vocab.json": f"https://huggingface.co/coqui/XTTS-v2/raw/v{model_name}/vocab.json"
+         "config.json": f"https://huggingface.co/coqui/XTTS-v2/raw/{model_name}/config.json",
+         "model.pth": f"https://huggingface.co/coqui/XTTS-v2/resolve/{model_name}/model.pth?download=true",
+         "vocab.json": f"https://huggingface.co/coqui/XTTS-v2/raw/{model_name}/vocab.json"
         }
 
         for file_name, url in files.items():
             file_path = os.path.join(model_folder, file_name)
             if not os.path.exists(file_path):
-                logger.info(f"Downloading {file_name} for Model v{model_name}...")
+                logger.info(f"Downloading {file_name} for Model {model_name}...")
                 CoquiEngine.download_file(url, file_path)
                 # r = requests.get(url, allow_redirects=True)
                 # with open(file_path, 'wb') as f:
