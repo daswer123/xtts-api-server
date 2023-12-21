@@ -346,7 +346,7 @@ class TTSWrapper:
         """ Gets the speaker_wav(s) for a given speaker name. """
         if speaker_name_or_path.endswith('.wav'):
             # it's a file name
-            if os.path.isabs(spekaer_name_or_path):
+            if os.path.isabs(speaker_name_or_path):
                 # absolute path; nothing to do
                 speaker_wav = speaker_name_or_path
             else:
