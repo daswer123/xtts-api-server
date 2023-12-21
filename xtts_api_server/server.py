@@ -45,6 +45,10 @@ if(not MODEL_SOURCE == "local" and DEEPSPEED and not STREAM_MODE and not STREAM_
 app = FastAPI()
 XTTS = TTSWrapper(OUTPUT_FOLDER,SPEAKER_FOLDER,LOWVRAM_MODE,MODEL_SOURCE,MODEL_VERSION,DEVICE,DEEPSPEED,USE_CACHE)
 
+# Check for old format model version
+XTTS.model_version = XTTS.check_model_version_old_format(MODEL_VERSION)
+MODEL_VERSION = XTTS.model_version
+
 # Create version string
 version_string = ""
 if MODEL_SOURCE == "api" or MODEL_VERSION == "main":
@@ -53,7 +57,7 @@ else:
     version_string = MODEL_VERSION
 
 # Load model
-# logger.info(f"The model {version_string} starts to load,wait until it loads")
+logger.info(f"The model {version_string} starts to load,wait until it loads")
 if STREAM_MODE or STREAM_MODE_IMPROVE:
     # Load model for Streaming
     check_stream2sentence_version()

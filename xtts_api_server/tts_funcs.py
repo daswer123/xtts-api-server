@@ -40,6 +40,7 @@ supported_languages = {
 }
 
 official_model_list = ["v2.0.0","v2.0.1","v2.0.2","v2.0.3","main"]
+official_model_list_v2 = ["2.0.0","2.0.1","2.0.2","2.0.3"]
 
 reversed_supported_languages = {name: code for code, name in supported_languages.items()}
 
@@ -70,6 +71,11 @@ class TTSWrapper:
             # Reset the contents of the cache file at each initialization.
             with open(self.cache_file_path, 'w') as cache_file:
                 json.dump({}, cache_file)
+    # HELP FUNC
+    def check_model_version_old_format(self,model_version):
+        if model_version in official_model_list_v2:
+            return "v"+model_version
+        return model_version
 
     # CACHE FUNCS
     def check_cache(self, text_params):
@@ -129,10 +135,9 @@ class TTSWrapper:
 
         if self.model_source != "api" and self.model_source != "apiManual":
           is_official_model = False
-          for model in official_model_list:
-            if self.model_version == model:
-              is_official_model = True
-              break
+        #   Check if the model version is in the official list
+          if self.model_version in official_model_list:
+            is_official_model = True
 
           self.load_local_model(load = is_official_model)
           if self.lowvram == False:
