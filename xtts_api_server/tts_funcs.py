@@ -17,6 +17,7 @@ import os
 import time 
 import re
 import json
+import socket
 
 # List of supported language codes
 supported_languages = {
@@ -272,11 +273,27 @@ class TTSWrapper:
         speakers = [ s['speaker_name'] for s in self._get_speakers() ] 
         return speakers
 
+    def get_local_ip(self):
+      try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(('10.255.255.255', 1))
+            IP = s.getsockname()[0] 
+      except Exception as e:
+        print(f"Failed to obtain a local IP: {e}")
+        return None
+      return IP
+
     # Special format for SillyTavern
     def get_speakers_special(self):
         BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
+        BASE_HOST = os.getenv('BASE_HOST', '127.0.0.1')
+        BASE_PORT = os.getenv('BASE_PORT', '8020')
         TUNNEL_URL = os.getenv('TUNNEL_URL', '')
 
+        is_local_host = BASE_HOST == '127.0.0.1' or BASE_HOST == "localhost"
+
+        if TUNNEL_URL == "" and not is_local_host:
+            TUNNEL_URL = f"http://{self.get_local_ip()}:{BASE_PORT}"
         speakers_special = []
 
         speakers = self._get_speakers()

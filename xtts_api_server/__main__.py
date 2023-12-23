@@ -12,6 +12,7 @@ parser.add_argument("-t", "--tunnel", default="", type=str, help="URL of tunnel 
 parser.add_argument("-ms", "--model-source", default="local", choices=["api","apiManual", "local"],
                     help="Define the model source: 'api' for latest version from repository, apiManual for 2.0.2 model and api inference or 'local' for using local inference and model v2.0.2.")
 parser.add_argument("-v", "--version", default="v2.0.2", type=str, help="You can specify which version of xtts to use,This version will be used everywhere in local, api and apiManual.")
+parser.add_argument("--listen", action='store_true', help="Allows the server to be used outside the local computer, similar to -hs 0.0.0.0.0.")
 parser.add_argument("--lowvram", action='store_true', help="Enable low vram mode which switches the model to RAM when not actively processing.")
 parser.add_argument("--deepspeed", action='store_true', help="Enables deepspeed mode, speeds up processing by several times.")
 parser.add_argument("--use-cache", action='store_true', help="Enables caching of results, your results will be saved and if there will be a repeated request, you will get a file instead of generation.")
@@ -21,15 +22,20 @@ parser.add_argument("--stream-play-sync", action='store_true', help="Additional 
 
 args = parser.parse_args()
 
+os.environ["LISTEN"] = str(args.listen).lower()
+host_ip = "0.0.0.0" if args.listen else args.host
+
 os.environ['DEVICE'] = args.device  # Set environment variable for output folder.
 os.environ['OUTPUT'] = args.output  # Set environment variable for output folder.
 os.environ['SPEAKER'] = args.speaker_folder  # Set environment variable for speaker folder.
-os.environ['BASE_URL'] = "http://" + args.host + ":" + str(args.port)  # Set environment variable for base url."
+os.environ['BASE_HOST'] = host_ip  # Set environment variable for base host."
+os.environ['BASE_PORT'] = str(args.port)  # Set environment variable for base port."
+os.environ['BASE_URL'] = "http://" + host_ip + ":" + str(args.port)  # Set environment variable for base url."
 os.environ['TUNNEL_URL'] = args.tunnel  # it is necessary to correctly return correct previews in list of speakers
 os.environ['MODEL_SOURCE'] = args.model_source  # Set environment variable for the model source
 os.environ["MODEL_VERSION"] = args.version # Specify version of XTTS model
-os.environ["USE_CACHE"] = str(args.use_cache).lower() # Set lowvram mode
-os.environ["DEEPSPEED"] = str(args.deepspeed).lower() # Set lowvram mode
+os.environ["USE_CACHE"] = str(args.use_cache).lower() # Enable caching results
+os.environ["DEEPSPEED"] = str(args.deepspeed).lower() # Enable deepspeed
 os.environ["LOWVRAM_MODE"] = str(args.lowvram).lower() # Set lowvram mode
 os.environ["STREAM_MODE"] = str(args.streaming_mode).lower() # Enable Streaming mode
 os.environ["STREAM_MODE_IMPROVE"] = str(args.streaming_mode_improve).lower() # Enable improved Streaming mode
@@ -39,4 +45,4 @@ os.environ["STREAM_PLAY_SYNC"] = str(args.stream_play_sync).lower() # Enable Str
 
 from xtts_api_server.server import app
 
-uvicorn.run(app, host=args.host, port=args.port)
+uvicorn.run(app, host=host_ip, port=args.port)

@@ -22,6 +22,7 @@ from xtts_api_server.modeldownloader import check_stream2sentence_version,instal
 DEVICE = os.getenv('DEVICE',"cuda")
 OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
 SPEAKER_FOLDER = os.getenv('SPEAKER', 'speakers')
+BASE_HOST = os.getenv('BASE_URL', '127.0.0.1:8020')
 BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
 MODEL_SOURCE = os.getenv("MODEL_SOURCE", "local")
 MODEL_VERSION = os.getenv("MODEL_VERSION","v2.0.2")
