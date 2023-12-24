@@ -39,7 +39,7 @@ pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 --index-url https://downl
 ### Linux
 ```bash
 python -m venv venv
-source venv\Scripts\activate
+source venv\bin\activate
 pip install xtts-api-server
 pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 --index-url https://download.pytorch.org/whl/cu118
 ```
