@@ -100,8 +100,10 @@ class CoquiEngine(BaseEngine):
                 break
 
             if is_official_model:
+              logger.info(f"Loading official model '{specific_model}' for streaming")
               self.local_model_path = self.download_model(specific_model, local_models_path)
             else:
+              logger.info(f"Loading custom model '{specific_model}' for streaming")
               self.local_model_path = os.path.join(local_models_path,specific_model)
 
         self.synthesize_process = Process(target=CoquiEngine._synthesize_worker, args=(child_synthesize_pipe, model_name, cloning_reference_wav, language, self.main_synthesize_ready_event, level, self.speed, thread_count, stream_chunk_size, full_sentences, overlap_wav_len, temperature, length_penalty, repetition_penalty, top_k, top_p, enable_text_splitting, use_mps, self.local_model_path, use_deepspeed, self.voices_path))

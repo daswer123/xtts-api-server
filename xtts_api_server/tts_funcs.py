@@ -61,6 +61,7 @@ class TTSWrapper:
 
         self.speaker_folder = speaker_folder
         self.output_folder = output_folder
+        self.custom_models_folder = "./models"
 
         self.create_directories()
         check_tts_version()
@@ -68,11 +69,19 @@ class TTSWrapper:
         self.enable_cache_results = enable_cache_results
         self.cache_file_path = os.path.join(output_folder, "cache.json")
 
+        self.is_official_model = True
+        
         if self.enable_cache_results:
             # Reset the contents of the cache file at each initialization.
             with open(self.cache_file_path, 'w') as cache_file:
                 json.dump({}, cache_file)
     # HELP FUNC
+    def isModelOfficial(self,model_version):
+        if model_version in official_model_list:
+            self.is_official_model = True
+            return True
+        return False
+
     def check_model_version_old_format(self,model_version):
         if model_version in official_model_list_v2:
             return "v"+model_version
@@ -120,43 +129,45 @@ class TTSWrapper:
             print("JSON decode error occurred while updating the cache: ", str(e))
             
     # LOAD FUNCS
-    def load_model(self):
+    def load_model(self,load=True):
         if self.model_source == "api":
             self.model = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
 
         if self.model_source == "apiManual":
-            this_dir = Path(__file__).parent.resolve()
-            download_model(this_dir,self.model_version)
-
-            this_dir = Path(__file__).parent.resolve()
-            config_path = this_dir / 'models' / f'{self.model_version}' / 'config.json'
-            checkpoint_dir = this_dir / 'models' / f'{self.model_version}'
+            this_dir = Path(__file__).parent.resolve() / "models"
+            if self.isModelOfficial(self.model_version):
+              download_model(this_dir,self.model_version)
+            else:
+              this_dir = Path(self.custom_models_folder).resolve()
+            
+            config_path = this_dir / f'{self.model_version}' / 'config.json'
+            checkpoint_dir = this_dir / f'{self.model_version}'
 
             self.model = TTS(model_path=checkpoint_dir,config_path=config_path).to(self.device)
 
         if self.model_source != "api" and self.model_source != "apiManual":
-          is_official_model = False
-        #   Check if the model version is in the official list
-          if self.model_version in official_model_list:
-            is_official_model = True
-
-          self.load_local_model(load = is_official_model)
-          if self.lowvram == False:
-            # Due to the fact that we create latents on the cpu and load them from the cuda we get an error
-            logger.info("Pre-create latents for all current speakers")
-            self.create_latents_for_all() 
+           is_official_model = False
+ 
+           self.load_local_model(load = is_official_model)
+           if self.lowvram == False:
+             # Due to the fact that we create latents on the cpu and load them from the cuda we get an error
+             logger.info("Pre-create latents for all current speakers")
+             self.create_latents_for_all() 
           
         logger.info("Model successfully loaded ")
     
     def load_local_model(self,load=True):
-        this_dir = Path(__file__).parent.resolve()
+        this_model_dir = Path(__file__).parent.resolve() 
 
-        if(load == True):
-          download_model(this_dir,self.model_version)
+        if self.isModelOfficial(self.model_version):
+            download_model(this_model_dir,self.model_version)
+            this_model_dir = this_model_dir / "models"
+        else:
+            this_model_dir = Path(self.custom_models_folder)
 
         config = XttsConfig()
-        config_path = this_dir / 'models' / f'{self.model_version}' / 'config.json'
-        checkpoint_dir = this_dir / 'models' / f'{self.model_version}'
+        config_path = this_model_dir /  f'{self.model_version}' / 'config.json'
+        checkpoint_dir = this_model_dir / f'{self.model_version}'
 
         config.load_json(str(config_path))
         
@@ -198,7 +209,7 @@ class TTSWrapper:
 
     # DIRICTORIES FUNCS
     def create_directories(self):
-        directories = [self.output_folder, self.speaker_folder]
+        directories = [self.output_folder, self.speaker_folder,self.custom_models_folder]
 
         for sanctuary in directories:
             # List of folders to be checked for existence

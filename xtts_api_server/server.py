@@ -38,10 +38,6 @@ STREAM_PLAY_SYNC = os.getenv("STREAM_PLAY_SYNC") == 'true'
 if(DEEPSPEED):
   install_deepspeed_based_on_python_version()
 
-if(not MODEL_SOURCE == "local" and DEEPSPEED and not STREAM_MODE and not STREAM_MODE_IMPROVE):
-    logger.info("You are using deepspeed, it only works with model source local, the model source is automatically changed to local")
-    MODEL_SOURCE = "local"
-
 # Create an instance of the TTSWrapper class and server
 app = FastAPI()
 XTTS = TTSWrapper(OUTPUT_FOLDER,SPEAKER_FOLDER,LOWVRAM_MODE,MODEL_SOURCE,MODEL_VERSION,DEVICE,DEEPSPEED,USE_CACHE)
@@ -58,7 +54,6 @@ else:
     version_string = MODEL_VERSION
 
 # Load model
-logger.info(f"The model {version_string} starts to load,wait until it loads")
 if STREAM_MODE or STREAM_MODE_IMPROVE:
     # Load model for Streaming
     check_stream2sentence_version()
@@ -68,14 +63,17 @@ if STREAM_MODE or STREAM_MODE_IMPROVE:
     if STREAM_MODE_IMPROVE:
         logger.info("You launched an improved version of streaming, this version features an improved tokenizer and more context when processing sentences, which can be good for complex languages like Chinese")
         
-    logger.info("Load model for Streaming")
-
     this_dir = Path(__file__).parent.resolve()
-    model_path = this_dir / "models"
+
+    if XTTS.isModelOfficial(MODEL_VERSION): 
+      model_path = this_dir / "models"
+    else:
+      model_path = "models"
     
     engine = CoquiEngine(specific_model=MODEL_VERSION,use_deepspeed=DEEPSPEED,local_models_path=str(model_path))
     stream = TextToAudioStream(engine)
 else:
+  logger.info(f"Model: '{version_string}' starts to load,wait until it loads")
   XTTS.load_model() 
 
 if USE_CACHE:

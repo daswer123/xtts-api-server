@@ -85,7 +85,7 @@ options:
   -o OUTPUT, --output Output folder
   -t TUNNEL_URL, --tunnel URL of tunnel used (e.g: ngrok, localtunnel)
   -ms MODEL_SOURCE, --model-source ["api","apiManual","local"]
-  -v MODEL_VERSION, --version You can download the official model or your own model, official version you can find [here](https://huggingface.co/coqui/XTTS-v2/tree/main)  the model version name is the same as the branch name [v2.0.2,v2.0.3, main] etc.
+  -v MODEL_VERSION, --version You can download the official model or your own model, official version you can find [here](https://huggingface.co/coqui/XTTS-v2/tree/main)  the model version name is the same as the branch name [v2.0.2,v2.0.3, main] etc. Or you can load your model, just put model in models folder
   --listen Allows the server to be used outside the local computer, similar to -hs 0.0.0.0
   --use-cache Enables caching of results, your results will be saved and if there will be a repeated request, you will get a file instead of generation
   --lowvram The mode in which the model will be stored in RAM and when the processing will move to VRAM, the difference in speed is small
