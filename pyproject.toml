@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "xtts-api-server"
-version = "0.7.3"
+version = "0.7.4"
 authors = [
   { name="daswer123", email="daswerq123@gmail.com" },
 ]
@@ -36,8 +36,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/daswer123/xttsv2-api-server"
-"Bug Tracker" = "https://github.com/daswer123/xttsv2-api-server/issues"
+Homepage = "https://github.com/daswer123/xtts-api-server"
+"Bug Tracker" = "https://github.com/daswer123/xtts-api-server/issues"
 
 [tool.hatch.build.targets.wheel]
 only-include=["xtts_api_server"]
