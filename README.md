@@ -44,6 +44,20 @@ pip install xtts-api-server
 pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 --index-url https://download.pytorch.org/whl/cu118
 ```
 
+### Manual
+```bash
+# Clone REPO
+git clone https://github.com/daswer123/xtts-api-server
+cd xtts-api-server
+# Create virtual env
+python -m venv venv
+venv/scripts/activate or source venv/bin/activate
+# Install deps
+pip install -r requirements.txt
+pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 --index-url https://download.pytorch.org/whl/cu118
+# Launch server
+python -m xtts_api_server 
+
 # Use Docker image with Docker Compose
 
 A Dockerfile is provided to build a Docker image, and a docker-compose.yml file is provided to run the server with Docker Compose as a service.
