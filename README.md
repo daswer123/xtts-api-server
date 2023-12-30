@@ -16,6 +16,9 @@ If you are looking for an option for normal XTTS use look here [https://github.c
 
 You can keep track of all changes on the [release page](https://github.com/daswer123/xtts-api-server/releases)
 
+## TODO
+- [ ] Make it possible to change generation parameters through the generation request and through a different endpoint
+
 ## Installation
 
 Simple installation :
