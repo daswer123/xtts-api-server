@@ -22,6 +22,10 @@ import io
 import wave
 import numpy as np
 
+# Class to check tts settings
+class InvalidSettingsError(Exception):
+    pass
+
 # List of supported language codes
 supported_languages = {
     "ar":"Arabic",
@@ -43,13 +47,23 @@ supported_languages = {
     "hi":"Hindi"
 }
 
+default_tts_settings = {
+    "temperature" : 0.75,
+    "length_penalty" : 1.0,
+    "repetition_penalty": 5.0,
+    "top_k" : 50,
+    "top_p" : 0.85,
+    "speed" : 1,
+    "enable_text_splitting": True
+}
+
 official_model_list = ["v2.0.0","v2.0.1","v2.0.2","v2.0.3","main"]
 official_model_list_v2 = ["2.0.0","2.0.1","2.0.2","2.0.3"]
 
 reversed_supported_languages = {name: code for code, name in supported_languages.items()}
 
 class TTSWrapper:
-    def __init__(self,output_folder = "./output", speaker_folder="./speakers",lowvram = False,model_source = "local",model_version = "2.0.2",device = "cuda",deepspeed = False,enable_cache_results = True):
+    def __init__(self,output_folder = "./output", speaker_folder="./speakers",model_folder="./xtts_folder",lowvram = False,model_source = "local",model_version = "2.0.2",device = "cuda",deepspeed = False,enable_cache_results = True):
 
         self.cuda = device # If the user has chosen what to use, we rewrite the value to the value we want to use
         self.device = 'cpu' if lowvram else (self.cuda if torch.cuda.is_available() else "cpu")
@@ -59,12 +73,13 @@ class TTSWrapper:
 
         self.model_source = model_source
         self.model_version = model_version
+        self.tts_settings = default_tts_settings
 
         self.deepspeed = deepspeed
 
         self.speaker_folder = speaker_folder
         self.output_folder = output_folder
-        self.custom_models_folder = "./models"
+        self.model_folder = model_folder
 
         self.create_directories()
         check_tts_version()
@@ -89,6 +104,14 @@ class TTSWrapper:
         if model_version in official_model_list_v2:
             return "v"+model_version
         return model_version
+
+    def get_models_list(self):
+        # Fetch all entries in the directory given by self.model_folder
+        entries = os.listdir(self.model_folder)
+        
+        # Filter out and return only directories
+        return [name for name in entries if os.path.isdir(os.path.join(self.model_folder, name))]
+        
 
     def get_wav_header(self, channels:int=1, sample_rate:int=24000, width:int=2) -> bytes:
         wav_buf = io.BytesIO()
@@ -147,12 +170,11 @@ class TTSWrapper:
             self.model = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
 
         if self.model_source == "apiManual":
-            this_dir = Path(__file__).parent.resolve() / "models"
+            this_dir = Path(self.model_folder)
+
             if self.isModelOfficial(self.model_version):
               download_model(this_dir,self.model_version)
-            else:
-              this_dir = Path(self.custom_models_folder).resolve()
-            
+
             config_path = this_dir / f'{self.model_version}' / 'config.json'
             checkpoint_dir = this_dir / f'{self.model_version}'
 
@@ -170,13 +192,11 @@ class TTSWrapper:
         logger.info("Model successfully loaded ")
     
     def load_local_model(self,load=True):
-        this_model_dir = Path(__file__).parent.resolve() 
+        this_model_dir = Path(self.model_folder)
 
         if self.isModelOfficial(self.model_version):
             download_model(this_model_dir,self.model_version)
-            this_model_dir = this_model_dir / "models"
-        else:
-            this_model_dir = Path(self.custom_models_folder)
+            this_model_dir = this_model_dir
 
         config = XttsConfig()
         config_path = this_model_dir /  f'{self.model_version}' / 'config.json'
@@ -187,6 +207,34 @@ class TTSWrapper:
         self.model = Xtts.init_from_config(config)
         self.model.load_checkpoint(config,use_deepspeed=self.deepspeed, checkpoint_dir=str(checkpoint_dir))
         self.model.to(self.device)
+
+    def switch_model(self,model_name):
+
+        model_list = self.get_models_list()
+        # Check to see if the same name is selected
+        if(model_name == self.model_version):
+            raise InvalidSettingsError("The model with this name is already loaded in memory")
+            return
+        
+        # Check if the model is in the list at all
+        if(model_name not in model_list):
+            raise InvalidSettingsError(f"A model with `{model_name}` name is not in the models folder, the current available models: {model_list}")
+            return
+
+        # Clear gpu cache from old model
+        self.model = ""
+        torch.cuda.empty_cache()
+        logger.info("Model successfully unloaded from memory")
+        
+        # Start load model
+        logger.info(f"Start loading {model_name} model")
+        self.model_version = model_name
+        if self.model_source == "local":
+          self.load_local_model()
+        else:
+          self.load_model()
+          
+        logger.info(f"Model successfully loaded")
 
     # LOWVRAM FUNCS
     def switch_model_device(self):
@@ -222,7 +270,7 @@ class TTSWrapper:
 
     # DIRICTORIES FUNCS
     def create_directories(self):
-        directories = [self.output_folder, self.speaker_folder,self.custom_models_folder]
+        directories = [self.output_folder, self.speaker_folder,self.model_folder]
 
         for sanctuary in directories:
             # List of folders to be checked for existence
@@ -248,6 +296,50 @@ class TTSWrapper:
             logger.info(f"Output folder is set to {folder}")
         else:
             raise ValueError("Provided path is not a valid directory")
+
+    def set_tts_settings(self, temperature, speed, length_penalty,
+                         repetition_penalty, top_p, top_k, enable_text_splitting):
+        # Validate each parameter and raise an exception if any checks fail.
+        
+        # Check temperature
+        if not (0.01 <= temperature <= 1):
+            raise InvalidSettingsError("Temperature must be between 0.01 and 1.")
+        
+        # Check speed
+        if not (0.2 <= speed <= 2):
+            raise InvalidSettingsError("Speed must be between 0.2 and 2.")
+        
+        # Check length_penalty (no explicit range specified)
+        if not isinstance(length_penalty, float):
+            raise InvalidSettingsError("Length penalty must be a floating point number.")
+        
+        # Check repetition_penalty
+        if not (0.1 <= repetition_penalty <= 10.0):
+            raise InvalidSettingsError("Repetition penalty must be between 0.1 and 10.0.")
+        
+        # Check top_p
+        if not (0.01 <= top_p <= 1):
+            raise InvalidSettingsError("Top_p must be between 0.01 and 1 and must be a float.")
+        
+        # Check top_k
+        if not (1 <= top_k <= 100):
+            raise InvalidSettingsError("Top_k must be an integer between 1 and 100.")
+        
+        # Check enable_text_splitting
+        if not isinstance(enable_text_splitting, bool):
+            raise InvalidSettingsError("Enable text splitting must be either True or False.")
+        
+        # All validations passed - proceed to apply settings.
+        self.tts_settings = {
+            "temperature": temperature,
+            "speed": speed,
+            "length_penalty": length_penalty,
+            "repetition_penalty": repetition_penalty,
+            "top_p": top_p,
+            "top_k": top_k,
+            "enable_text_splitting": enable_text_splitting,
+        }
+        print("Successfully updated TTS settings.")
 
     # GET FUNCS
     def get_wav_files(self, directory):
@@ -361,12 +453,7 @@ class TTSWrapper:
             language,
             speaker_embedding=speaker_embedding,
             gpt_cond_latent=gpt_cond_latent,
-            temperature=0.75,
-            length_penalty=1.0,
-            repetition_penalty=5.0,
-            top_k=50,
-            top_p=0.85,
-            enable_text_splitting=True,
+            **self.tts_settings, # Expands the object with the settings and applies them for generation
             stream_chunk_size=100,
         )
         
@@ -402,12 +489,7 @@ class TTSWrapper:
             language,
             gpt_cond_latent=gpt_cond_latent,
             speaker_embedding=speaker_embedding,
-            temperature=0.75,
-            length_penalty=1.0,
-            repetition_penalty=5.0,
-            top_k=50,
-            top_p=0.85,
-            enable_text_splitting=True
+            **self.tts_settings, # Expands the object with the settings and applies them for generation
         )
 
         torchaudio.save(output_file, torch.tensor(out["wav"]).unsqueeze(0), 24000)

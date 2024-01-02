@@ -119,14 +119,15 @@ def check_stream2sentence_version():
 
 def download_model(this_dir,model_version):
     # Define paths
-    base_path = this_dir / 'models'
+    base_path = this_dir
     model_path = base_path / f'{model_version}'
 
     # Define files and their corresponding URLs
     files_to_download = {
          "config.json": f"https://huggingface.co/coqui/XTTS-v2/raw/{model_version}/config.json",
          "model.pth": f"https://huggingface.co/coqui/XTTS-v2/resolve/{model_version}/model.pth?download=true",
-         "vocab.json": f"https://huggingface.co/coqui/XTTS-v2/raw/{model_version}/vocab.json"
+         "vocab.json": f"https://huggingface.co/coqui/XTTS-v2/raw/{model_version}/vocab.json",
+         "speakers_xtts.pth": "https://huggingface.co/coqui/XTTS-v2/resolve/main/speakers_xtts.pth?download=true"
     }
 
     # Check and create directories

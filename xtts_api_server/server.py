@@ -14,7 +14,7 @@ from loguru import logger
 from argparse import ArgumentParser
 from pathlib import Path
 
-from xtts_api_server.tts_funcs import TTSWrapper,supported_languages
+from xtts_api_server.tts_funcs import TTSWrapper,supported_languages,InvalidSettingsError
 from xtts_api_server.RealtimeTTS import TextToAudioStream, CoquiEngine
 from xtts_api_server.modeldownloader import check_stream2sentence_version,install_deepspeed_based_on_python_version
 
@@ -22,6 +22,7 @@ from xtts_api_server.modeldownloader import check_stream2sentence_version,instal
 DEVICE = os.getenv('DEVICE',"cuda")
 OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
 SPEAKER_FOLDER = os.getenv('SPEAKER', 'speakers')
+MODEL_FOLDER = os.getenv('MODEL', 'models')
 BASE_HOST = os.getenv('BASE_URL', '127.0.0.1:8020')
 BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
 MODEL_SOURCE = os.getenv("MODEL_SOURCE", "local")
@@ -40,7 +41,7 @@ if(DEEPSPEED):
 
 # Create an instance of the TTSWrapper class and server
 app = FastAPI()
-XTTS = TTSWrapper(OUTPUT_FOLDER,SPEAKER_FOLDER,LOWVRAM_MODE,MODEL_SOURCE,MODEL_VERSION,DEVICE,DEEPSPEED,USE_CACHE)
+XTTS = TTSWrapper(OUTPUT_FOLDER,SPEAKER_FOLDER,MODEL_FOLDER,LOWVRAM_MODE,MODEL_SOURCE,MODEL_VERSION,DEVICE,DEEPSPEED,USE_CACHE)
 
 # Check for old format model version
 XTTS.model_version = XTTS.check_model_version_old_format(MODEL_VERSION)
@@ -63,12 +64,7 @@ if STREAM_MODE or STREAM_MODE_IMPROVE:
     if STREAM_MODE_IMPROVE:
         logger.info("You launched an improved version of streaming, this version features an improved tokenizer and more context when processing sentences, which can be good for complex languages like Chinese")
         
-    this_dir = Path(__file__).parent.resolve()
-
-    if XTTS.isModelOfficial(MODEL_VERSION): 
-      model_path = this_dir / "models"
-    else:
-      model_path = "models"
+    model_path = XTTS.model_folder
     
     engine = CoquiEngine(specific_model=MODEL_VERSION,use_deepspeed=DEEPSPEED,local_models_path=str(model_path))
     stream = TextToAudioStream(engine)
@@ -120,6 +116,18 @@ class OutputFolderRequest(BaseModel):
 class SpeakerFolderRequest(BaseModel):
     speaker_folder: str
 
+class ModelNameRequest(BaseModel):
+    model_name: str
+
+class TTSSettingsRequest(BaseModel):
+    temperature: float
+    speed: float
+    length_penalty: float
+    repetition_penalty: float
+    top_p: float
+    top_k: int
+    enable_text_splitting: bool
+
 class SynthesisRequest(BaseModel):
     text: str
     speaker_wav: str 
@@ -150,7 +158,16 @@ def get_languages():
 def get_folders():
     speaker_folder = XTTS.speaker_folder
     output_folder = XTTS.output_folder
-    return {"speaker_folder": speaker_folder, "output_folder": output_folder}
+    model_folder = XTTS.model_folder
+    return {"speaker_folder": speaker_folder, "output_folder": output_folder,"model_folder":model_folder}
+
+@app.get("/get_models_list")
+def get_models_list():
+    return XTTS.get_models_list()
+
+@app.get("/get_tts_settings")
+def get_tts_settings():
+    return XTTS.tts_settings
 
 @app.get("/sample/{file_name:path}")
 def get_sample(file_name: str):
@@ -176,6 +193,24 @@ def set_speaker_folder(speaker_req: SpeakerFolderRequest):
         XTTS.set_speaker_folder(speaker_req.speaker_folder)
         return {"message": f"Speaker folder set to {speaker_req.speaker_folder}"}
     except ValueError as e:
+        logger.error(e)
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/switch_model")
+def switch_model(modelReq: ModelNameRequest):
+    try:
+        XTTS.switch_model(modelReq.model_name)
+        return {"message": f"Model switched to {modelReq.model_name}"}
+    except InvalidSettingsError as e:  
+        logger.error(e)
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/set_tts_settings")
+def set_tts_settings_endpoint(tts_settings_req: TTSSettingsRequest):
+    try:
+        XTTS.set_tts_settings(**tts_settings_req.dict())
+        return {"message": "Settings successfully applied"}
+    except InvalidSettingsError as e: 
         logger.error(e)
         raise HTTPException(status_code=400, detail=str(e))
 
