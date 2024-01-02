@@ -1,5 +1,5 @@
 from TTS.api import TTS
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse,StreamingResponse
 
@@ -178,6 +178,35 @@ def set_speaker_folder(speaker_req: SpeakerFolderRequest):
     except ValueError as e:
         logger.error(e)
         raise HTTPException(status_code=400, detail=str(e))
+
+@app.get('/tts_stream')
+async def tts_stream(request: Request, text: str = Query(), speaker_wav: str = Query(), language: str = Query()):
+    # Validate local model source.
+    if XTTS.model_source != "local":
+        raise HTTPException(status_code=400,
+                            detail="HTTP Streaming is only supported for local models.")
+    # Validate language code against supported languages.
+    if language.lower() not in supported_languages:
+        raise HTTPException(status_code=400,
+                            detail="Language code sent is either unsupported or misspelled.")
+            
+    async def generator():
+        chunks = XTTS.process_tts_to_file(
+            text=text,
+            speaker_name_or_path=speaker_wav,
+            language=language.lower(),
+            stream=True,
+        )
+        # Write file header to the output stream.
+        yield XTTS.get_wav_header()
+        async for chunk in chunks:
+            # Check if the client is still connected.
+            disconnected = await request.is_disconnected()
+            if disconnected:
+                break
+            yield chunk
+
+    return StreamingResponse(generator(), media_type='audio/x-wav')
 
 @app.post("/tts_to_audio/")
 async def tts_to_audio(request: SynthesisRequest):
