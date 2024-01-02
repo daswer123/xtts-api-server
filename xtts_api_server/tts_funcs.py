@@ -327,8 +327,8 @@ class TTSWrapper:
             raise InvalidSettingsError("Top_k must be an integer between 1 and 100.")
 
         # Check stream_chunk_size
-        if not (20 <= stream_chunk_size <= 250):
-            raise InvalidSettingsError("Stream chunk size must be an integer between 20 and 250.")
+        if not (20 <= stream_chunk_size <= 400):
+            raise InvalidSettingsError("Stream chunk size must be an integer between 20 and 400.")
         
         # Check enable_text_splitting
         if not isinstance(enable_text_splitting, bool):

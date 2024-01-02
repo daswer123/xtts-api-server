@@ -17,7 +17,7 @@ If you are looking for an option for normal XTTS use look here [https://github.c
 You can keep track of all changes on the [release page](https://github.com/daswer123/xtts-api-server/releases)
 
 ## TODO
-- [ ] Make it possible to change generation parameters through the generation request and through a different endpoint
+- [x] Make it possible to change generation parameters through the generation request and through a different endpoint
 
 ## Installation
 
@@ -100,8 +100,9 @@ options:
   -hs HOST, --host HOST
   -p PORT, --port PORT
   -d DEVICE, --device DEVICE `cpu` or `cuda`, you can specify which video card to use, for example, `cuda:0`
-  -sf SPEAKER_FOLDER, --speaker_folder The folder where you get the samples for tts
+  -sf SPEAKER_FOLDER, --speaker-folder The folder where you get the samples for tts
   -o OUTPUT, --output Output folder
+  -mf MODELS_FOLDERS, --model-folder Folder where models for XTTS will be stored, finetuned models should be stored in this folder
   -t TUNNEL_URL, --tunnel URL of tunnel used (e.g: ngrok, localtunnel)
   -ms MODEL_SOURCE, --model-source ["api","apiManual","local"]
   -v MODEL_VERSION, --version You can download the official model or your own model, official version you can find [here](https://huggingface.co/coqui/XTTS-v2/tree/main)  the model version name is the same as the branch name [v2.0.2,v2.0.3, main] etc. Or you can load your model, just put model in models folder
