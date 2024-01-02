@@ -120,6 +120,7 @@ class ModelNameRequest(BaseModel):
     model_name: str
 
 class TTSSettingsRequest(BaseModel):
+    stream_chunk_size: int
     temperature: float
     speed: float
     length_penalty: float
@@ -167,7 +168,8 @@ def get_models_list():
 
 @app.get("/get_tts_settings")
 def get_tts_settings():
-    return XTTS.tts_settings
+    settings = {**XTTS.tts_settings,"stream_chunk_size":XTTS.stream_chunk_size}
+    return settings
 
 @app.get("/sample/{file_name:path}")
 def get_sample(file_name: str):

@@ -74,6 +74,7 @@ class TTSWrapper:
         self.model_source = model_source
         self.model_version = model_version
         self.tts_settings = default_tts_settings
+        self.stream_chunk_size = 100
 
         self.deepspeed = deepspeed
 
@@ -298,7 +299,7 @@ class TTSWrapper:
             raise ValueError("Provided path is not a valid directory")
 
     def set_tts_settings(self, temperature, speed, length_penalty,
-                         repetition_penalty, top_p, top_k, enable_text_splitting):
+                         repetition_penalty, top_p, top_k, enable_text_splitting, stream_chunk_size):
         # Validate each parameter and raise an exception if any checks fail.
         
         # Check temperature
@@ -324,6 +325,10 @@ class TTSWrapper:
         # Check top_k
         if not (1 <= top_k <= 100):
             raise InvalidSettingsError("Top_k must be an integer between 1 and 100.")
+
+        # Check stream_chunk_size
+        if not (20 <= stream_chunk_size <= 250):
+            raise InvalidSettingsError("stream_chunk_size must be an integer between 20 and 250.")
         
         # Check enable_text_splitting
         if not isinstance(enable_text_splitting, bool):
@@ -339,6 +344,9 @@ class TTSWrapper:
             "top_k": top_k,
             "enable_text_splitting": enable_text_splitting,
         }
+
+        self.stream_chunk_size = stream_chunk_size
+
         print("Successfully updated TTS settings.")
 
     # GET FUNCS
@@ -454,7 +462,7 @@ class TTSWrapper:
             speaker_embedding=speaker_embedding,
             gpt_cond_latent=gpt_cond_latent,
             **self.tts_settings, # Expands the object with the settings and applies them for generation
-            stream_chunk_size=100,
+            stream_chunk_size=self.stream_chunk_size,
         )
         
         for chunk in chunks:
