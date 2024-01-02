@@ -382,7 +382,7 @@ class TTSWrapper:
 
         if len(file_chunks) > 0:
             wav = torch.cat(file_chunks, dim=0)
-            torchaudio.save(output_file, wav.squeeze().unsqueeze(0), 24000)
+            torchaudio.save(output_file, wav.cpu().squeeze().unsqueeze(0), 24000)
         else:
             logger.warning("No audio generated.")
 
