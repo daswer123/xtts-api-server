@@ -374,7 +374,7 @@ class TTSWrapper:
             if isinstance(chunk, list):
                 chunk = torch.cat(chunk, dim=0)
             file_chunks.append(chunk)
-            chunk = chunk.numpy()
+            chunk = chunk.cpu().numpy()
             chunk = chunk[None, : int(chunk.shape[0])]
             chunk = np.clip(chunk, -1, 1)
             chunk = (chunk * 32767).astype(np.int16)
