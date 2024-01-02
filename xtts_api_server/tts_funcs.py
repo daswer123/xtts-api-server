@@ -18,6 +18,9 @@ import time
 import re
 import json
 import socket
+import io
+import wave
+import numpy as np
 
 # List of supported language codes
 supported_languages = {
@@ -86,6 +89,16 @@ class TTSWrapper:
         if model_version in official_model_list_v2:
             return "v"+model_version
         return model_version
+
+    def get_wav_header(self, channels:int=1, sample_rate:int=24000, width:int=2) -> bytes:
+        wav_buf = io.BytesIO()
+        with wave.open(wav_buf, "wb") as out:
+            out.setnchannels(channels)
+            out.setsampwidth(width)
+            out.setframerate(sample_rate)
+            out.writeframes(b"")
+        wav_buf.seek(0)
+        return wav_buf.read()
 
     # CACHE FUNCS
     def check_cache(self, text_params):
@@ -336,6 +349,48 @@ class TTSWrapper:
         text = re.sub(r'"\s?(.*?)\s?"', r"'\1'", text)
         return text
 
+    async def stream_generation(self,text,speaker_name,speaker_wav,language,output_file):
+        # Log time
+        generate_start_time = time.time()  # Record the start time of loading the model
+
+        gpt_cond_latent, speaker_embedding = self.get_or_create_latents(speaker_name, speaker_wav)
+        file_chunks = []
+
+        chunks = self.model.inference_stream(
+            text,
+            language,
+            speaker_embedding=speaker_embedding,
+            gpt_cond_latent=gpt_cond_latent,
+            temperature=0.75,
+            length_penalty=1.0,
+            repetition_penalty=5.0,
+            top_k=50,
+            top_p=0.85,
+            enable_text_splitting=True,
+            stream_chunk_size=100,
+        )
+        
+        for chunk in chunks:
+            if isinstance(chunk, list):
+                chunk = torch.cat(chunk, dim=0)
+            file_chunks.append(chunk)
+            chunk = chunk.numpy()
+            chunk = chunk[None, : int(chunk.shape[0])]
+            chunk = np.clip(chunk, -1, 1)
+            chunk = (chunk * 32767).astype(np.int16)
+            yield chunk.tobytes()
+
+        if len(file_chunks) > 0:
+            wav = torch.cat(file_chunks, dim=0)
+            torchaudio.save(output_file, wav.squeeze().unsqueeze(0), 24000)
+        else:
+            logger.warning("No audio generated.")
+
+        generate_end_time = time.time()  # Record the time to generate TTS
+        generate_elapsed_time = generate_end_time - generate_start_time
+
+        logger.info(f"Processing time: {generate_elapsed_time:.2f} seconds.")
+
     def local_generation(self,text,speaker_name,speaker_wav,language,output_file):
         # Log time
         generate_start_time = time.time()  # Record the start time of loading the model
@@ -398,7 +453,7 @@ class TTSWrapper:
 
 
     # MAIN FUNC
-    def process_tts_to_file(self, text, speaker_name_or_path, language, file_name_or_path="out.wav"):
+    def process_tts_to_file(self, text, speaker_name_or_path, language, file_name_or_path="out.wav", stream=False):
         try:
             speaker_wav = self.get_speaker_wav(speaker_name_or_path)
             # Determine output path based on whether a full path or a file name was provided
@@ -441,7 +496,16 @@ class TTSWrapper:
 
             # Define generation if model via api or locally
             if self.model_source == "local":
-                self.local_generation(clear_text,speaker_name_or_path,speaker_wav,language,output_file)
+                if stream:
+                    async def stream_fn():
+                        async for chunk in self.stream_generation(clear_text,speaker_name_or_path,speaker_wav,language,output_file):
+                            yield chunk
+                        self.switch_model_device()
+                        # After generation completes successfully...
+                        self.update_cache(text_params,output_file)
+                    return stream_fn()
+                else:
+                    self.local_generation(clear_text,speaker_name_or_path,speaker_wav,language,output_file)
             else:
                 self.api_generation(clear_text,speaker_wav,language,output_file)
             
