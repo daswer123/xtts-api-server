@@ -2,19 +2,19 @@ FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
 LABEL description="Docker image for xtts-api-server"
 
 # Set default values for environment variables if they are not provided
-ENV HOST="localhost" \
-    PORT=8020 \
-    DEVICE="cuda:0" \
-    SPEAKER_FOLDER="/app/speakers/" \
-    OUTPUT="/app/output/" \
-    TUNNEL="" \
-    MODEL_FOLDER="/app/xtts_models/" \
-    MODEL_SOURCE="local" \
-    VERSION="v2.0.2" \
-    LISTEN=false \
-    LOWVRAM=false \
-    DEEPSPEED=true \
-    USE_CACHE=false 
+# ENV HOST="localhost" \
+#     PORT=8020 \
+#     DEVICE="cuda:0" \
+#     SPEAKER_FOLDER="/app/speakers/" \
+#     OUTPUT="/app/output/" \
+#     TUNNEL="" \
+#     MODEL_FOLDER="/app/xtts_models/" \
+#     MODEL_SOURCE="local" \
+#     VERSION="v2.0.2" \
+#     LISTEN=false \
+#     LOWVRAM=false \
+#     DEEPSPEED=true \
+#     USE_CACHE=false 
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked,rw apt-get update && \
     apt-get install --no-install-recommends -y python3-dev portaudio19-dev libportaudio2 libasound2-dev libportaudiocpp0 git python3 python3-pip make g++ ffmpeg && \
@@ -36,4 +36,4 @@ RUN --mount=type=cache,target=/root/.cache/pip,rw \
 
 EXPOSE ${CONTAINER_PORT:-8020} ${CONTAINER_API_PORT:-8020}
 # echo 'y' is to accept coqui tts model download terms
-CMD python3 -m xtts_api_server -sf ${EXAMPLE_FOLDER:-"/app/speakers"} --deepspeed
+CMD python3 -m xtts_api_server -sf "/app/speakers" -o "/app/output" -mf "/app/xtts_models" --deepspeed
