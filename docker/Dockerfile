@@ -4,7 +4,7 @@ LABEL description="Docker image for xtts-api-server"
 # Set default values for environment variables if they are not provided
 ENV HOST="localhost" \
     PORT=8020 \
-    DEVICE="cuda" \
+    DEVICE="cuda:0" \
     SPEAKER_FOLDER="/app/speakers/" \
     OUTPUT="/app/output/" \
     TUNNEL="" \
@@ -13,9 +13,8 @@ ENV HOST="localhost" \
     VERSION="v2.0.2" \
     LISTEN=false \
     LOWVRAM=false \
-    DEEPSPEED=false \
-    USE_CACHE=false \
-    STREAMPLAYSYNC=false
+    DEEPSPEED=true \
+    USE_CACHE=false 
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked,rw apt-get update && \
     apt-get install --no-install-recommends -y python3-dev portaudio19-dev libportaudio2 libasound2-dev libportaudiocpp0 git python3 python3-pip make g++ ffmpeg && \
