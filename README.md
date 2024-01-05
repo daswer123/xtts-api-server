@@ -67,11 +67,16 @@ python -m xtts_api_server
 
 A Dockerfile is provided to build a Docker image, and a docker-compose.yml file is provided to run the server with Docker Compose as a service.
 
-You will need to setup the env variables by copying the .env.example file to .env and filling in the values.
-If you want to use your own speakers, you can put it in `example` folder before building the image.
-The example folder will be copied to the container and the server will use it as a speaker folder.
-
 You can build the image with the following command:
+
+```bash
+mkdir xtts-api-server
+cd xtts-api-server
+docker run -d daswer123/xtts-api-server
+
+```
+
+OR
 
 ```bash
 cd docker
