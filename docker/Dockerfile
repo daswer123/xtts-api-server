@@ -1,39 +1,29 @@
-FROM nvidia/cuda:11.8.0-runtime-ubuntu22.04
+# Use an official NVIDIA base image with CUDA support
+FROM nvidia/cuda:12.1.0-cudnn8-devel-ubuntu22.04
+
+# Set label for the docker image description
 LABEL description="Docker image for xtts-api-server"
 
-# Set default values for environment variables if they are not provided
-# ENV HOST="localhost" \
-#     PORT=8020 \
-#     DEVICE="cuda:0" \
-#     SPEAKER_FOLDER="/app/speakers/" \
-#     OUTPUT="/app/output/" \
-#     TUNNEL="" \
-#     MODEL_FOLDER="/app/xtts_models/" \
-#     MODEL_SOURCE="local" \
-#     VERSION="v2.0.2" \
-#     LISTEN=false \
-#     LOWVRAM=false \
-#     DEEPSPEED=true \
-#     USE_CACHE=false 
-
-RUN --mount=type=cache,target=/var/cache/apt,sharing=locked,rw apt-get update && \
-    apt-get install --no-install-recommends -y python3-dev portaudio19-dev libportaudio2 libasound2-dev libportaudiocpp0 git python3 python3-pip make g++ ffmpeg && \
+# Install required packages (avoid cache to reduce image size)
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+    python3-dev portaudio19-dev libportaudio2 libasound2-dev libportaudiocpp0 \
+    git python3 python3-pip make g++ ffmpeg && \
     rm -rf /var/lib/apt/lists/*
 
-RUN --mount=type=cache,target=/root/.cache/pip,rw pip3 install virtualenv
+# Upgrade pip and install virtualenv
+RUN python3 -m pip install --upgrade pip setuptools wheel ninja virtualenv
 
-RUN --mount=type=cache,target=/root/.cache/pip,rw \
-    pip3 install --upgrade pip setuptools wheel ninja && \
-    pip3 install torch torchaudio --index-url https://download.pytorch.org/whl/cu118 \
-    pip3 install deepspeed==12.4
+# Copy the application source code to /app directory and change the workdir to /app
+# COPY . /app
+# WORKDIR /app
 
-RUN mkdir /app
-WORKDIR /app
-ADD . /app
+# Install Python dependencies
+RUN pip install xtts-api-server
+RUN pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu121
 
-RUN --mount=type=cache,target=/root/.cache/pip,rw \ 
-    pip3 install /app 
+# Expose the container ports
+EXPOSE 8020
 
-EXPOSE ${CONTAINER_PORT:-8020} ${CONTAINER_API_PORT:-8020}
-# echo 'y' is to accept coqui tts model download terms
-CMD python3 -m xtts_api_server -sf "/app/speakers" -o "/app/output" -mf "/app/xtts_models" --deepspeed
+# Run xtts_api_server when the container starts
+CMD ["bash", "-c", "python3 -m xtts_api_server -hs 127.0.0.1 -p 8020 -sf 'xtts-server/speakers' -o 'xtts-server/output' -mf 'xtts-server/models' --deepspeed"]
