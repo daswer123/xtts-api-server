@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse,StreamingResponse
 
 from pydantic import BaseModel
 import uvicorn
+from typing import Optional
 
 import os
 import time
@@ -14,9 +15,9 @@ from loguru import logger
 from argparse import ArgumentParser
 from pathlib import Path
 
-from xtts_api_server.tts_funcs import TTSWrapper,supported_languages,InvalidSettingsError
-from xtts_api_server.RealtimeTTS import TextToAudioStream, CoquiEngine
-from xtts_api_server.modeldownloader import check_stream2sentence_version,install_deepspeed_based_on_python_version
+from tts_funcs import TTSWrapper,supported_languages,InvalidSettingsError
+from RealtimeTTS import TextToAudioStream, CoquiEngine
+from modeldownloader import check_stream2sentence_version,install_deepspeed_based_on_python_version
 
 # Default Folders , you can change them via API
 DEVICE = os.getenv('DEVICE',"cuda")
@@ -131,14 +132,19 @@ class TTSSettingsRequest(BaseModel):
 
 class SynthesisRequest(BaseModel):
     text: str
-    speaker_wav: str 
+    speaker_wav: Optional[str] = None
     language: str
 
 class SynthesisFileRequest(BaseModel):
     text: str
-    speaker_wav: str 
+    speaker_wav: Optional[str] = None
     language: str
-    file_name_or_path: str  
+    file_name_or_path: str
+
+class TTSStreamRequest(BaseModel):
+    text: str
+    speaker_wav: Optional[str] = None
+    language: str
 
 @app.get("/speakers_list")
 def get_speakers():
@@ -217,7 +223,7 @@ def set_tts_settings_endpoint(tts_settings_req: TTSSettingsRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.get('/tts_stream')
-async def tts_stream(request: Request, text: str = Query(), speaker_wav: str = Query(), language: str = Query()):
+async def tts_stream(request: TTSStreamRequest):
     # Validate local model source.
     if XTTS.model_source != "local":
         raise HTTPException(status_code=400,

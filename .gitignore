@@ -8,3 +8,13 @@ xtts_api_server/models
 *.pyc
 xtts_api_server/RealtimeTTS/engines/coqui_engine_old.py
 xtts_models
+example/
+docker/
+.github/
+.git/
+xtts_api_server/env/
+xtts_api_server/output/
+xtts_api_server/speakers/
+xtts_api_server/xtts_models
+xtts_api_server/.vs/
+.gitignore

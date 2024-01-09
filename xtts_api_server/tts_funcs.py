@@ -9,7 +9,7 @@ from TTS.tts.configs.xtts_config import XttsConfig
 from TTS.tts.models.xtts import Xtts
 from pathlib import Path
 
-from xtts_api_server.modeldownloader import download_model,check_tts_version
+from modeldownloader import download_model,check_tts_version
 
 from loguru import logger
 from datetime import datetime
@@ -211,6 +211,7 @@ class TTSWrapper:
 
     def switch_model(self,model_name):
 
+        self.current_model = model_name
         model_list = self.get_models_list()
         # Check to see if the same name is selected
         if(model_name == self.model_version):
@@ -256,10 +257,26 @@ class TTSWrapper:
     # SPEAKER FUNCS
     def get_or_create_latents(self, speaker_name, speaker_wav):
         if speaker_name not in self.latents_cache:
+            # Use the provided speaker_wav if it exists
+            if not os.path.exists(speaker_wav):
+                # If the provided speaker_wav doesn't exist, check for reference.wav in the model folder
+                if not self.current_model:
+                    raise ValueError("No model is currently loaded.")
+                model_path = Path(self.model_folder) / self.current_model
+                reference_wav = model_path / "reference.wav"
+
+                # Use 'reference.wav' directly if it exists
+                if reference_wav.exists():
+                    speaker_wav = reference_wav
+                else:
+                    raise ValueError(f"No suitable speaker wav file found for {speaker_name}")
+
             logger.info(f"creating latents for {speaker_name}: {speaker_wav}")
-            gpt_cond_latent, speaker_embedding = self.model.get_conditioning_latents(speaker_wav)
+            gpt_cond_latent, speaker_embedding = self.model.get_conditioning_latents(str(speaker_wav))
             self.latents_cache[speaker_name] = (gpt_cond_latent, speaker_embedding)
+
         return self.latents_cache[speaker_name]
+
 
     def create_latents_for_all(self):
         speakers_list = self._get_speakers()
@@ -544,6 +561,15 @@ class TTSWrapper:
 
     # MAIN FUNC
     def process_tts_to_file(self, text, speaker_name_or_path, language, file_name_or_path="out.wav", stream=False):
+        # Check if a specific speaker is provided. If not, use 'reference.wav'
+        if not speaker_name_or_path:
+            if not self.current_model:
+                raise ValueError("No model is currently loaded.")
+            model_path = Path(self.model_folder) / self.current_model
+            reference_wav = model_path / "reference.wav"
+            if not reference_wav.exists():
+                raise ValueError(f"No 'reference.wav' found in {model_path}")
+            speaker_name_or_path = str(reference_wav)
         try:
             speaker_wav = self.get_speaker_wav(speaker_name_or_path)
             # Determine output path based on whether a full path or a file name was provided
@@ -553,6 +579,7 @@ class TTSWrapper:
             else:
                 # Only a filename was provided; prepend with output folder.
                 output_file = os.path.join(self.output_folder, file_name_or_path)
+
 
             # Check if 'text' is a valid path to a '.txt' file.
             if os.path.isfile(text) and text.lower().endswith('.txt'):

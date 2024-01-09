@@ -1,4 +1,4 @@
-from xtts_api_server.tts_funcs import official_model_list
+from tts_funcs import official_model_list
 from torch.multiprocessing import Process, Pipe, Event, set_start_method
 from .base_engine import BaseEngine
 from typing import Union, List
