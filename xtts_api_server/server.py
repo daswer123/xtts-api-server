@@ -23,19 +23,19 @@ from modeldownloader import check_stream2sentence_version,install_deepspeed_base
 DEVICE = os.getenv('DEVICE',"cuda")
 OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
 SPEAKER_FOLDER = os.getenv('SPEAKER', 'speakers')
-MODEL_FOLDER = os.getenv('MODEL', 'models')
+MODEL_FOLDER = os.getenv('MODEL', 'xtts_models')
 BASE_HOST = os.getenv('BASE_URL', '127.0.0.1:8020')
 BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
 MODEL_SOURCE = os.getenv("MODEL_SOURCE", "local")
-MODEL_VERSION = os.getenv("MODEL_VERSION","v2.0.2")
+MODEL_VERSION = os.getenv("MODEL_VERSION","main")
 LOWVRAM_MODE = os.getenv("LOWVRAM_MODE") == 'true'
 DEEPSPEED = os.getenv("DEEPSPEED") == 'true'
 USE_CACHE = os.getenv("USE_CACHE") == 'true'
 
 # STREAMING VARS
-STREAM_MODE = os.getenv("STREAM_MODE") == 'true'
-STREAM_MODE_IMPROVE = os.getenv("STREAM_MODE_IMPROVE") == 'true'
-STREAM_PLAY_SYNC = os.getenv("STREAM_PLAY_SYNC") == 'true'
+STREAM_MODE = os.getenv("STREAM_MODE") == 'false'
+STREAM_MODE_IMPROVE = os.getenv("STREAM_MODE_IMPROVE") == 'false'
+STREAM_PLAY_SYNC = os.getenv("STREAM_PLAY_SYNC") == 'false'
 
 if(DEEPSPEED):
   install_deepspeed_based_on_python_version()
@@ -134,17 +134,20 @@ class SynthesisRequest(BaseModel):
     text: str
     speaker_wav: Optional[str] = None
     language: str
+    save_path: Optional[str] = None
 
 class SynthesisFileRequest(BaseModel):
     text: str
     speaker_wav: Optional[str] = None
     language: str
     file_name_or_path: str
+    save_path: Optional[str] = None
 
 class TTSStreamRequest(BaseModel):
     text: str
     speaker_wav: Optional[str] = None
     language: str
+    save_path: Optional[str] = None
 
 @app.get("/speakers_list")
 def get_speakers():
@@ -300,7 +303,8 @@ async def tts_to_audio(request: SynthesisRequest):
             output_file_path = XTTS.process_tts_to_file(
                 text=request.text,
                 speaker_name_or_path=request.speaker_wav,
-                language=request.language.lower()
+                language=request.language.lower(),
+                file_name_or_path=request.save_path
             )
 
             # Return the file in the response
@@ -339,4 +343,4 @@ async def tts_to_file(request: SynthesisFileRequest):
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 if __name__ == "__main__":
-    uvicorn.run(app,host="0.0.0.0",port=8002)
+    uvicorn.run(app,host="0.0.0.0",port=8020)
