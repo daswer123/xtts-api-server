@@ -2,7 +2,7 @@
 
 import torch
 import torchaudio
-
+import torchaudio.transforms as T
 from TTS.api import TTS
 
 from TTS.tts.configs.xtts_config import XttsConfig
@@ -503,25 +503,30 @@ class TTSWrapper:
 
         logger.info(f"Processing time: {generate_elapsed_time:.2f} seconds.")
 
-    def local_generation(self,text,speaker_name,speaker_wav,language,output_file):
-        # Log time
-        generate_start_time = time.time()  # Record the start time of loading the model
+    def local_generation(self, text, speaker_name, speaker_wav, language, output_file):
+        # Existing code for TTS generation
+        generate_start_time = time.time()
 
         gpt_cond_latent, speaker_embedding = self.get_or_create_latents(speaker_name, speaker_wav)
-
         out = self.model.inference(
             text,
             language,
             gpt_cond_latent=gpt_cond_latent,
             speaker_embedding=speaker_embedding,
-            **self.tts_settings, # Expands the object with the settings and applies them for generation
+            **self.tts_settings,
         )
 
-        torchaudio.save(output_file, torch.tensor(out["wav"]).unsqueeze(0), 24000)
+        # Convert audio to 16-bit depth
+        audio_tensor = torch.tensor(out["wav"]).unsqueeze(0)
+        audio_16bit = T.Resample(orig_freq=24000, new_freq=24000, resampling_method='sinc_interpolation').to(audio_tensor.dtype)(audio_tensor)
+        audio_16bit = torch.clamp(audio_16bit, -1.0, 1.0)
+        audio_16bit = (audio_16bit * 32767).to(torch.int16)
 
-        generate_end_time = time.time()  # Record the time to generate TTS
+        # Save the audio file
+        torchaudio.save(output_file, audio_16bit, 24000)
+
+        generate_end_time = time.time()
         generate_elapsed_time = generate_end_time - generate_start_time
-
         logger.info(f"Processing time: {generate_elapsed_time:.2f} seconds.")
 
     def api_generation(self,text,speaker_wav,language,output_file):
@@ -599,7 +604,8 @@ class TTSWrapper:
             text_params = {
               'text': clear_text,
               'speaker_name_or_path': speaker_name_or_path,
-              'language': language
+              'language': language,
+              'file_name_or_path': file_name_or_path
             }
 
             # Check if results are already cached.
@@ -634,7 +640,6 @@ class TTSWrapper:
 
         except Exception as e:
             raise e  # Propagate exceptions for endpoint handling.
-
         
 
 
