@@ -1,51 +1,18 @@
 # A simple FastAPI Server to run XTTSv2
 
-This project is inspired by [silero-api-server](https://github.com/ouoertheo/silero-api-server) and utilizes [XTTSv2](https://github.com/coqui-ai/TTS).
+This project is inspired by [daswer123](https://github.com/daswer123/xtts-api-server) and utilizes [XTTSv2](https://github.com/coqui-ai/TTS).
 
-This server was created for [SillyTavern](https://github.com/SillyTavern/SillyTavern) but you can use it for your needs
+This server was created for [Mantella](https://github.com/art-from-the-machine/Mantella) but you can use it for your needs
 
 Feel free to make PRs or use the code for your own needs
 
-There's a [google collab version](https://colab.research.google.com/drive/1b-X3q5miwYLVMuiH_T73odMO8cbtICEY?usp=sharing) you can use it if your computer is weak.
+## If you want to train you own dataset :
 
-If you want to get a high-quality voice clone, I advise you to use [webui for fine-tuning xtts](https://github.com/daswer123/xtts-webui)
+You can use the webui for fine-tuning xtts from [webui for fine-tuning xtts](https://github.com/daswer123/xtts-webui)
+Or my work to train in batch using only the command line : [xtts-trainer-no-ui-auto](https://github.com/Haurrus/xtts-trainer-no-ui-auto)
 
-If you are looking for an option for normal XTTS use look here [https://github.com/daswer123/xtts-webui](https://github.com/daswer123/xtts-webui)
-
-## Changelog
-
-You can keep track of all changes on the [release page](https://github.com/daswer123/xtts-api-server/releases)
-
-## TODO
-- [x] Make it possible to change generation parameters through the generation request and through a different endpoint
 
 ## Installation
-
-Simple installation :
-
-```bash
-pip install xtts-api-server
-```
-
-This will install all the necessary dependencies, including a **CPU support only** version of PyTorch
-
-I recommend that you install the **GPU version** to improve processing speed ( up to 3 times faster )
-
-### Windows
-```bash
-python -m venv venv
-venv\Scripts\activate
-pip install xtts-api-server
-pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 --index-url https://download.pytorch.org/whl/cu118
-```
-
-### Linux
-```bash
-python -m venv venv
-source venv\bin\activate
-pip install xtts-api-server
-pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 --index-url https://download.pytorch.org/whl/cu118
-```
 
 ### Manual
 ```bash
@@ -62,32 +29,9 @@ pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 --index-url https://downl
 python -m xtts_api_server
  
 ```
+## Mantella specific
 
-# Use Docker image with Docker Compose
-
-A Dockerfile is provided to build a Docker image, and a docker-compose.yml file is provided to run the server with Docker Compose as a service.
-
-You can build the image with the following command:
-
-```bash
-mkdir xtts-api-server
-cd xtts-api-server
-docker run -d daswer123/xtts-api-server
-
-```
-
-OR
-
-```bash
-cd docker
-docker compose build
-```
-
-Then you can run the server with the following command:
-
-```bash
-docker compose up # or with -d to run in background
-```
+Don't forget to add the folder \plugins\lip_fuz at the root folder so Mantella can find it when you pass the argument in config.ini (xtts_server_folder)
 
 ## Starting Server
 
@@ -168,6 +112,33 @@ By default the `speakers` folder should appear in the folder, you need to put th
 
 You can change the folders for speakers and the folder for output via the API.
 
+
+# Use Docker image with Docker Compose
+
+A Dockerfile is provided to build a Docker image, and a docker-compose.yml file is provided to run the server with Docker Compose as a service.
+
+You can build the image with the following command:
+
+```bash
+mkdir xtts-api-server
+cd xtts-api-server
+docker run -d daswer123/xtts-api-server
+
+```
+
+OR
+
+```bash
+cd docker
+docker compose build
+```
+
+Then you can run the server with the following command:
+
+```bash
+docker compose up # or with -d to run in background
+```
+
 # Note on creating samples for quality voice cloning
 
 The following post is a quote by user [Material1276 from reddit](https://www.reddit.com/r/Oobabooga/comments/1807tsl/comment/ka5l8w9/?share_id=_5hh4KJTXrEOSP0hR0hCK&utm_content=2&utm_medium=android_app&utm_name=androidcss&utm_source=share&utm_term=1)
@@ -192,6 +163,7 @@ The following post is a quote by user [Material1276 from reddit](https://www.red
 
 # Credit
 
-1. Thanks to the author **Kolja Beigel** for the repository [RealtimeTTS](https://github.com/KoljaB/RealtimeTTS) , I took some of its code for my project.
-2. Thanks **[erew123](https://github.com/oobabooga/text-generation-webui/issues/4712#issuecomment-1825593734)** for the note about creating samples and the code to download the models
-3. Thanks **lendot** for helping to fix the multiprocessing bug and adding code to use multiple samples for speakers
+1. Thanks to **daswer123** [daswer123](https://github.com/daswer123/xtts-api-server)
+2. Thanks to the author **Kolja Beigel** for the repository [RealtimeTTS](https://github.com/KoljaB/RealtimeTTS) , I took some of its code for my project.
+3. Thanks **[erew123](https://github.com/oobabooga/text-generation-webui/issues/4712#issuecomment-1825593734)** for the note about creating samples and the code to download the models
+4. Thanks **lendot** for helping to fix the multiprocessing bug and adding code to use multiple samples for speakers
