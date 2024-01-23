@@ -14,6 +14,8 @@ Or my work to train in batch using only the command line : [xtts-trainer-no-ui-a
 
 ## Installation
 
+I'm using python 3.11.7
+
 ### Manual
 ```bash
 # Clone REPO
