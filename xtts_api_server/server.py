@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse,StreamingResponse
 
 from pydantic import BaseModel
 import uvicorn
+from typing import Optional
 
 import os
 import time
@@ -22,7 +23,7 @@ from xtts_api_server.modeldownloader import check_stream2sentence_version,instal
 DEVICE = os.getenv('DEVICE',"cuda")
 OUTPUT_FOLDER = os.getenv('OUTPUT', 'output')
 SPEAKER_FOLDER = os.getenv('SPEAKER', 'speakers')
-MODEL_FOLDER = os.getenv('MODEL', 'models')
+MODEL_FOLDER = os.getenv('MODEL', 'xtts_models')
 BASE_HOST = os.getenv('BASE_URL', '127.0.0.1:8020')
 BASE_URL = os.getenv('BASE_URL', '127.0.0.1:8020')
 MODEL_SOURCE = os.getenv("MODEL_SOURCE", "local")
@@ -131,14 +132,22 @@ class TTSSettingsRequest(BaseModel):
 
 class SynthesisRequest(BaseModel):
     text: str
-    speaker_wav: str 
+    speaker_wav: Optional[str] = None
     language: str
+    save_path: Optional[str] = None
 
 class SynthesisFileRequest(BaseModel):
     text: str
-    speaker_wav: str 
+    speaker_wav: Optional[str] = None
     language: str
-    file_name_or_path: str  
+    file_name_or_path: str
+    save_path: Optional[str] = None
+
+class TTSStreamRequest(BaseModel):
+    text: str
+    speaker_wav: Optional[str] = None
+    language: str
+    save_path: Optional[str] = None
 
 @app.get("/speakers_list")
 def get_speakers():
@@ -217,7 +226,7 @@ def set_tts_settings_endpoint(tts_settings_req: TTSSettingsRequest):
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.get('/tts_stream')
-async def tts_stream(request: Request, text: str = Query(), speaker_wav: str = Query(), language: str = Query()):
+async def tts_stream(request: TTSStreamRequest):
     # Validate local model source.
     if XTTS.model_source != "local":
         raise HTTPException(status_code=400,
@@ -229,9 +238,9 @@ async def tts_stream(request: Request, text: str = Query(), speaker_wav: str = Q
             
     async def generator():
         chunks = XTTS.process_tts_to_file(
-            text=text,
-            speaker_name_or_path=speaker_wav,
-            language=language.lower(),
+            text=request.text,
+            speaker_name_or_path=request.speaker_wav,
+            language=request.language.lower(),
             stream=True,
         )
         # Write file header to the output stream.
@@ -294,7 +303,8 @@ async def tts_to_audio(request: SynthesisRequest):
             output_file_path = XTTS.process_tts_to_file(
                 text=request.text,
                 speaker_name_or_path=request.speaker_wav,
-                language=request.language.lower()
+                language=request.language.lower(),
+                file_name_or_path=request.save_path
             )
 
             # Return the file in the response
@@ -333,4 +343,4 @@ async def tts_to_file(request: SynthesisFileRequest):
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")
 
 if __name__ == "__main__":
-    uvicorn.run(app,host="0.0.0.0",port=8002)
+    uvicorn.run(app,host="0.0.0.0",port=8020)
