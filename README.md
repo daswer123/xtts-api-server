@@ -33,7 +33,7 @@ python -m xtts_api_server
 ```
 ## Mantella specific
 
-Don't forget to add the folder \plugins\lip_fuz at the root folder so Mantella can find it when you pass the argument in config.ini (xtts_server_folder)
+Don't forget to add the folder \plugins\lip_fuz in the root folder so Mantella can find it when you pass the argument in config.ini (xtts_server_folder)
 
 ## Starting Server
 
