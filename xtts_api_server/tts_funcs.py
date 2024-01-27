@@ -256,6 +256,7 @@ class TTSWrapper:
 
     # SPEAKER FUNCS
     def get_or_create_latents(self, speaker_name, speaker_wav):
+        speaker_name = speaker_name.lower()
         if speaker_name not in self.latents_cache:
             logger.info(f"creating latents for {speaker_name}: {speaker_wav}")
             gpt_cond_latent, speaker_embedding = self.model.get_conditioning_latents(speaker_wav)
@@ -452,7 +453,7 @@ class TTSWrapper:
         text = re.sub(r'"\s?(.*?)\s?"', r"'\1'", text)
         return text
 
-    async def stream_generation(self, text, speaker_name, speaker_wav, language, output_file):
+    async def stream_generation(self,text,speaker_name,speaker_wav,language,output_file):
         # Log time
         generate_start_time = time.time()  # Record the start time of loading the model
 
@@ -464,24 +465,19 @@ class TTSWrapper:
             language,
             speaker_embedding=speaker_embedding,
             gpt_cond_latent=gpt_cond_latent,
-            **self.tts_settings,  # Expands the object with the settings and applies them for generation
+            **self.tts_settings, # Expands the object with the settings and applies them for generation
             stream_chunk_size=self.stream_chunk_size,
         )
-
+        
         for chunk in chunks:
             if isinstance(chunk, list):
                 chunk = torch.cat(chunk, dim=0)
             file_chunks.append(chunk)
-
-            # Convert chunk to tensor and process similarly to local_generation
-            audio_tensor = chunk.unsqueeze(0)
-            # Assuming the original frequency is 24000, if it's different, update accordingly
-            audio_16bit = T.Resample(orig_freq=24000, new_freq=24000, resampling_method='sinc_interpolation').to(audio_tensor.dtype)(audio_tensor)
-            audio_16bit = torch.clamp(audio_16bit, -1.0, 1.0)
-            audio_16bit = (audio_16bit * 32767).to(torch.int16)
-
-            # Convert to bytes and yield
-            yield audio_16bit.squeeze().cpu().numpy().tobytes()
+            chunk = chunk.cpu().numpy()
+            chunk = chunk[None, : int(chunk.shape[0])]
+            chunk = np.clip(chunk, -1, 1)
+            chunk = (chunk * 32767).astype(np.int16)
+            yield chunk.tobytes()
 
         if len(file_chunks) > 0:
             wav = torch.cat(file_chunks, dim=0)
@@ -494,42 +490,26 @@ class TTSWrapper:
 
         logger.info(f"Processing time: {generate_elapsed_time:.2f} seconds.")
 
-
-    def local_generation(self, text, speaker_name, speaker_wav, language, output_file):
-        # Existing code for TTS generation
-        generate_start_time = time.time()
+    def local_generation(self,text,speaker_name,speaker_wav,language,output_file):
+        # Log time
+        generate_start_time = time.time()  # Record the start time of loading the model
 
         gpt_cond_latent, speaker_embedding = self.get_or_create_latents(speaker_name, speaker_wav)
-        #logger.info(f"Latents created for all {self.latents_cache} speakers !!!!!")
+
         out = self.model.inference(
             text,
             language,
             gpt_cond_latent=gpt_cond_latent,
             speaker_embedding=speaker_embedding,
-            **self.tts_settings,
+            **self.tts_settings, # Expands the object with the settings and applies them for generation
         )
 
-        # Convert audio to 16-bit depth
-        audio_tensor = torch.tensor(out["wav"]).unsqueeze(0)
-        audio_16bit = T.Resample(orig_freq=24000, new_freq=24000, resampling_method='sinc_interpolation').to(audio_tensor.dtype)(audio_tensor)
-        audio_16bit = torch.clamp(audio_16bit, -1.0, 1.0)
-        audio_16bit = (audio_16bit * 32767).to(torch.int16)
-        
-        #time before saving:
-        """
-        generate_end_time = time.time()
-        generate_elapsed_time = generate_end_time - generate_start_time
-        logger.info(f"#time before saving: {generate_elapsed_time:.2f} seconds.")
-        if generate_elapsed_time < 1:
-            time.sleep(1 - generate_elapsed_time)
-            """
-        # Save the audio file
-        torchaudio.save(output_file, audio_16bit, 24000)
+        torchaudio.save(output_file, torch.tensor(out["wav"]).unsqueeze(0), 24000)
 
-        ##time after saving:
-        generate_end_time = time.time()
+        generate_end_time = time.time()  # Record the time to generate TTS
         generate_elapsed_time = generate_end_time - generate_start_time
-        logger.info(f"#time after saving: {generate_elapsed_time:.2f} seconds.")
+
+        logger.info(f"Processing time: {generate_elapsed_time:.2f} seconds.")
 
     def api_generation(self,text,speaker_wav,language,output_file):
         self.model.tts_to_file(
