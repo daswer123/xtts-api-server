@@ -2,7 +2,6 @@
 
 import torch
 import torchaudio
-import torchaudio.transforms as T
 from TTS.api import TTS
 
 from TTS.tts.configs.xtts_config import XttsConfig
@@ -549,22 +548,24 @@ class TTSWrapper:
     # MAIN FUNC
     def process_tts_to_file(self, text, speaker_name_or_path, language, file_name_or_path="out.wav", stream=False):
         if file_name_or_path == '' or file_name_or_path is None:
-            file_name_or_path = "out.wav"
-            
+            file_name_or_path = "out.wav"  
         try:
             # Check speaker_name_or_path in models_folder and speakers_folder
             if speaker_name_or_path:
                 speaker_path_models_folder = Path(self.model_folder) / speaker_name_or_path
                 speaker_path_speakers_folder = Path(self.speaker_folder) / speaker_name_or_path
-
-                if speaker_path_models_folder.is_dir():
-                    reference_wav = speaker_path_models_folder / "reference.wav"
-                    if not reference_wav.exists():
-                        raise ValueError(f"No 'reference.wav' found in {speaker_path_models_folder}")
-                    speaker_wav = str(reference_wav)
-                elif speaker_path_speakers_folder.is_dir():
+                speaker_path_speakers_file = speaker_path_speakers_folder.with_suffix('.wav')
+                
+                # Check if the .wav file exists or if the directory exists for the speaker
+                if speaker_path_speakers_folder.is_dir() or speaker_path_speakers_file.exists():
                     speaker_wav = self.get_speaker_wav(speaker_name_or_path)
-                elif not speaker_path_speakers_folder.is_dir():
+                elif speaker_path_models_folder.is_dir():
+                    reference_wav = speaker_path_models_folder / "reference.wav"
+                    if reference_wav.exists():
+                        speaker_wav = str(reference_wav)
+                    else:
+                        logger.info(f"No 'reference.wav' found in {speaker_path_models_folder}")
+                else:
                     raise ValueError(f"Speaker path '{speaker_name_or_path}' not found in speakers or models folder.")
             # Determine output path based on whether a full path or a file name was provided
             if os.path.isabs(file_name_or_path):

@@ -232,7 +232,7 @@ async def tts_stream(request: TTSStreamRequest):
         raise HTTPException(status_code=400,
                             detail="HTTP Streaming is only supported for local models.")
     # Validate language code against supported languages.
-    if language.lower() not in supported_languages:
+    if request.language.lower() not in supported_languages:
         raise HTTPException(status_code=400,
                             detail="Language code sent is either unsupported or misspelled.")
             
