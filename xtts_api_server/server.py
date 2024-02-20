@@ -173,6 +173,10 @@ def get_tts_settings():
 
 @app.get("/sample/{file_name:path}")
 def get_sample(file_name: str):
+    # A fix for path traversal vulenerability. 
+    # An attacker may summon this endpoint with ../../etc/passwd and recover the password file of your PC (in linux) or access any other file on the PC
+    if ".." in file_name:
+        raise HTTPException(status_code=404, detail=".. in the file name! Are you kidding me?") 
     file_path = os.path.join(XTTS.speaker_folder, file_name)
     if os.path.isfile(file_path):
         return FileResponse(file_path, media_type="audio/wav")
