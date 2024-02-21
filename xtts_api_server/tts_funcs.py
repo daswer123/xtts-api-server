@@ -2,7 +2,6 @@
 
 import torch
 import torchaudio
-
 from TTS.api import TTS
 
 from TTS.tts.configs.xtts_config import XttsConfig
@@ -211,6 +210,7 @@ class TTSWrapper:
 
     def switch_model(self,model_name):
 
+        self.current_model = model_name
         model_list = self.get_models_list()
         # Check to see if the same name is selected
         if(model_name == self.model_version):
@@ -255,19 +255,21 @@ class TTSWrapper:
 
     # SPEAKER FUNCS
     def get_or_create_latents(self, speaker_name, speaker_wav):
+        speaker_name = speaker_name.lower()
         if speaker_name not in self.latents_cache:
             logger.info(f"creating latents for {speaker_name}: {speaker_wav}")
             gpt_cond_latent, speaker_embedding = self.model.get_conditioning_latents(speaker_wav)
             self.latents_cache[speaker_name] = (gpt_cond_latent, speaker_embedding)
         return self.latents_cache[speaker_name]
 
+
     def create_latents_for_all(self):
         speakers_list = self._get_speakers()
 
         for speaker in speakers_list:
             self.get_or_create_latents(speaker['speaker_name'],speaker['speaker_wav'])
-
         logger.info(f"Latents created for all {len(speakers_list)} speakers.")
+        #logger.info(f"Latents created for all {self.latents_cache} speakers !!!!!")
 
     # DIRICTORIES FUNCS
     def create_directories(self):
@@ -354,6 +356,7 @@ class TTSWrapper:
         """ Finds all the wav files in a directory. """
         wav_files = [f for f in os.listdir(directory) if f.endswith('.wav')]
         return wav_files
+
 
     def _get_speakers(self):
         """
@@ -544,8 +547,26 @@ class TTSWrapper:
 
     # MAIN FUNC
     def process_tts_to_file(self, text, speaker_name_or_path, language, file_name_or_path="out.wav", stream=False):
+        if file_name_or_path == '' or file_name_or_path is None:
+            file_name_or_path = "out.wav"  
         try:
-            speaker_wav = self.get_speaker_wav(speaker_name_or_path)
+            # Check speaker_name_or_path in models_folder and speakers_folder
+            if speaker_name_or_path:
+                speaker_path_models_folder = Path(self.model_folder) / speaker_name_or_path
+                speaker_path_speakers_folder = Path(self.speaker_folder) / speaker_name_or_path
+                speaker_path_speakers_file = speaker_path_speakers_folder.with_suffix('.wav')
+                
+                # Check if the .wav file exists or if the directory exists for the speaker
+                if speaker_path_speakers_folder.is_dir() or speaker_path_speakers_file.exists():
+                    speaker_wav = self.get_speaker_wav(speaker_name_or_path)
+                elif speaker_path_models_folder.is_dir():
+                    reference_wav = speaker_path_models_folder / "reference.wav"
+                    if reference_wav.exists():
+                        speaker_wav = str(reference_wav)
+                    else:
+                        logger.info(f"No 'reference.wav' found in {speaker_path_models_folder}")
+                else:
+                    raise ValueError(f"Speaker path '{speaker_name_or_path}' not found in speakers or models folder.")
             # Determine output path based on whether a full path or a file name was provided
             if os.path.isabs(file_name_or_path):
                 # An absolute path was provided by user; use as is.
@@ -553,6 +574,7 @@ class TTSWrapper:
             else:
                 # Only a filename was provided; prepend with output folder.
                 output_file = os.path.join(self.output_folder, file_name_or_path)
+
 
             # Check if 'text' is a valid path to a '.txt' file.
             if os.path.isfile(text) and text.lower().endswith('.txt'):
@@ -572,7 +594,8 @@ class TTSWrapper:
             text_params = {
               'text': clear_text,
               'speaker_name_or_path': speaker_name_or_path,
-              'language': language
+              'language': language,
+              'file_name_or_path': file_name_or_path
             }
 
             # Check if results are already cached.
@@ -608,7 +631,6 @@ class TTSWrapper:
         except Exception as e:
             raise e  # Propagate exceptions for endpoint handling.
 
-        
 
 
 
