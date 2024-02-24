@@ -1,5 +1,5 @@
 from TTS.api import TTS
-from fastapi import FastAPI, HTTPException, Request, Query
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse,StreamingResponse
 
@@ -13,6 +13,7 @@ import shutil
 from loguru import logger
 from argparse import ArgumentParser
 from pathlib import Path
+from uuid import uuid4
 
 from xtts_api_server.tts_funcs import TTSWrapper,supported_languages,InvalidSettingsError
 from xtts_api_server.RealtimeTTS import TextToAudioStream, CoquiEngine
@@ -250,7 +251,7 @@ async def tts_stream(request: Request, text: str = Query(), speaker_wav: str = Q
     return StreamingResponse(generator(), media_type='audio/x-wav')
 
 @app.post("/tts_to_audio/")
-async def tts_to_audio(request: SynthesisRequest):
+async def tts_to_audio(request: SynthesisRequest, background_tasks: BackgroundTasks):
     if STREAM_MODE or STREAM_MODE_IMPROVE:
         try:
             global stream
@@ -298,8 +299,12 @@ async def tts_to_audio(request: SynthesisRequest):
             output_file_path = XTTS.process_tts_to_file(
                 text=request.text,
                 speaker_name_or_path=request.speaker_wav,
-                language=request.language.lower()
+                language=request.language.lower(),
+                file_name_or_path=f'{str(uuid4())}.wav'
             )
+
+            if not XTTS.enable_cache_results:
+                background_tasks.add_task(os.unlink, output_file_path)
 
             # Return the file in the response
             return FileResponse(
