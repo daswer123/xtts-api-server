@@ -8,9 +8,9 @@ Feel free to make PRs or use the code for your own needs
 
 There's a [google collab version](https://colab.research.google.com/drive/1b-X3q5miwYLVMuiH_T73odMO8cbtICEY?usp=sharing) you can use it if your computer is weak.
 
-If you want to get a high-quality voice clone, I advise you to use [webui for fine-tuning xtts](https://github.com/daswer123/xtts-webui)
-
 If you are looking for an option for normal XTTS use look here [https://github.com/daswer123/xtts-webui](https://github.com/daswer123/xtts-webui)
+
+**Recently I have little time to do this project, so I advise you to get acquainted with a [similar project](https://github.com/erew123/alltalk_tts)**
 
 ## Changelog
 
