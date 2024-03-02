@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "xtts-api-server"
-version = "0.8.5"
+version = "0.8.6"
 authors = [
   { name="daswer123", email="daswerq123@gmail.com" },
 ]
@@ -33,7 +33,8 @@ dependencies = [
   "cutlet",
   'fugashi[unidic-lite]',
   'tts==0.21.3',
-  'transformers==4.36.2'
+  'transformers==4.36.2',
+  "uuid"
 ]
 
 [project.urls]
