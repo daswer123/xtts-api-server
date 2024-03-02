@@ -14,3 +14,4 @@ cutlet
 fugashi[unidic-lite]
 tts==0.21.3
 transformers==4.36.2
+uuid
