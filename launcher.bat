@@ -194,9 +194,10 @@ echo %blue_fg_strong%/ Home%reset%
 echo ---------------------------------------------------------------
 echo What would you like to do?
 echo 1. Install XTTS
-echo 2. Uninstall XTTS
-echo 3. Start XTTS
-echo 4. Edit XTTS Modules
+echo 2. Start XTTS
+echo 3. Update
+echo 4. Edit XTTS Modules 
+echo 5. Uninstall XTTS
 echo 0. Exit
 
 set "choice="
@@ -209,11 +210,13 @@ REM ############## HOME - BACKEND #############################
 if "%choice%"=="1" (
     call :install_xtts
 ) else if "%choice%"=="2" (
-    call :uninstall_xtts
-) else if "%choice%"=="3" (
     call :start_xtts
+) else if "%choice%"=="3" (
+    call :update_xtts
 ) else if "%choice%"=="4" (
     call :edit_xtts_modules
+) else if "%choice%"=="5" (
+    call :uninstall_xtts
 ) else if "%choice%"=="0" (
     exit
 ) else (
@@ -403,6 +406,21 @@ set "xtts_start_command=%xtts_start_command:xtts_start_command=%"
 start cmd /k "title XTTSv2 API Server && cd /d %~dp0xtts && %xtts_start_command%"
 goto :home
 
+
+:update_xtts
+REM Check if XTTS directory exists
+if not exist "%~dp0xtts" (
+    echo %yellow_bg%[%time%]%reset% %yellow_fg_strong%[WARN] xtts directory not found. Skipping XTTS update.%reset%
+    pause
+    goto :home
+)
+echo %blue_bg%[%time%]%reset% %blue_fg_strong%[INFO]%reset% Updating XTTS...
+call conda activate xtts
+pip install --upgrade xtts-api-server
+call conda deactivate
+echo %blue_bg%[%time%]%reset% %blue_fg_strong%[INFO]%reset% %green_fg_strong%XTTS updated successfully.%reset%
+pause
+goto :home
 
 REM ==================================================================================================================================================
 
