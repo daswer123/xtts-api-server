@@ -8,3 +8,4 @@ xtts_api_server/models
 *.pyc
 xtts_api_server/RealtimeTTS/engines/coqui_engine_old.py
 xtts_models
+modules-xtts.txt
