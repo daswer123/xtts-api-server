@@ -41,6 +41,7 @@ pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 --index-url https://downl
 
 ### Linux
 ```bash
+sudo apt-get install -y python3-dev python3-venv portaudio19-dev
 python -m venv venv
 source venv\bin\activate
 pip install xtts-api-server
