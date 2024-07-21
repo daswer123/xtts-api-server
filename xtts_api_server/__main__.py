@@ -13,7 +13,7 @@ parser.add_argument("-mf", "--model-folder", default="xtts_models/", type=str, h
 parser.add_argument("-ms", "--model-source", default="local", choices=["api","apiManual", "local"],
                     help="Define the model source: 'api' for latest version from repository, apiManual for 2.0.2 model and api inference or 'local' for using local inference and model v2.0.2.")
 parser.add_argument("-v", "--version", default="v2.0.2", type=str, help="You can specify which version of xtts to use or specify your own model, just upload model folder in models folder ,This version will be used everywhere in local and apiManual.")
-parser.add_argument("--listen", action='store_true', help="Allows the server to be used outside the local computer, similar to -hs 0.0.0.0.0.")
+parser.add_argument("--listen", action='store_true', help="Allows the server to be used outside the local computer, similar to -hs 0.0.0.0")
 parser.add_argument("--lowvram", action='store_true', help="Enable low vram mode which switches the model to RAM when not actively processing.")
 parser.add_argument("--deepspeed", action='store_true', help="Enables deepspeed mode, speeds up processing by several times.")
 parser.add_argument("--use-cache", action='store_true', help="Enables caching of results, your results will be saved and if there will be a repeated request, you will get a file instead of generation.")
