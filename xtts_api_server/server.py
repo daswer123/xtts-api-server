@@ -1,5 +1,5 @@
 from TTS.api import TTS
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Query
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Query, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse,StreamingResponse
 
@@ -202,6 +202,17 @@ def set_speaker_folder(speaker_req: SpeakerFolderRequest):
     except ValueError as e:
         logger.error(e)
         raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/upload_sample")
+async def upload_sample(wavFile: UploadFile = File(...)):
+
+    UPLOAD_DIR = XTTS.speaker_folder
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    file_path = os.path.join(UPLOAD_DIR, wavFile.filename)
+    with open(file_path, "wb") as file_object:
+        file_object.write(await wavFile.read())
+    return {"filename": wavFile.filename}
+
 
 @app.post("/switch_model")
 def switch_model(modelReq: ModelNameRequest):
