@@ -6,7 +6,7 @@ This server was created for [SillyTavern](https://github.com/SillyTavern/SillyTa
 
 Feel free to make PRs or use the code for your own needs
 
-There's a [google collab version](https://colab.research.google.com/drive/1b-X3q5miwYLVMuiH_T73odMO8cbtICEY?usp=sharing) you can use it if your computer is weak.
+There's a updated [google collab version](https://colab.research.google.com/drive/1YeXc3g5HG2jaAb1USrowXapZn9V-QFjq?usp=sharing) you can use it if your computer is weak.
 
 If you are looking for an option for normal XTTS use look here [https://github.com/daswer123/xtts-webui](https://github.com/daswer123/xtts-webui)
 
@@ -31,30 +31,38 @@ This will install all the necessary dependencies, including a **CPU support only
 
 I recommend that you install the **GPU version** to improve processing speed ( up to 3 times faster )
 
-### Windows
-```bash
-python -m venv venv
-venv\Scripts\activate
-pip install xtts-api-server
-pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 --index-url https://download.pytorch.org/whl/cu118
-```
+We strongly recommend Python 3.10 (either in a conda environment or a regular venv) to avoid dependency conflicts.
+Option A – conda (cross-platform)
+bash
+Copy
+# 1. Create & activate a fresh 3.10 env
+conda create -n xtts310 python=3.10 -y
+conda activate xtts310
 
-### Linux
-```bash
-sudo apt install -y python3-dev python3-venv portaudio19-dev
-python -m venv venv
-source venv\bin\activate
+# 2. Install xtts-api-server + GPU PyTorch
 pip install xtts-api-server
-pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 --index-url https://download.pytorch.org/whl/cu118
-```
+pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 \
+    --index-url https://download.pytorch.org/whl/cu118
+Option B – venv (Windows / Linux / macOS)
+bash
+Copy
+# 1. Create & activate a 3.10 venv
+python3.10 -m venv venv
+source venv/bin/activate   # Linux/macOS
+# or
+venv\Scripts\activate      # Windows
 
+# 2. Install xtts-api-server + GPU PyTorch
+pip install xtts-api-server
+pip install torch==2.1.1+cu118 torchaudio==2.1.1+cu118 \
+    --index-url https://download.pytorch.org/whl/cu118
 ### Manual
 ```bash
 # Clone REPO
 git clone https://github.com/daswer123/xtts-api-server
 cd xtts-api-server
 # Create virtual env
-python -m venv venv
+python3.10 -m venv venv
 venv/scripts/activate or source venv/bin/activate
 # Install deps
 pip install -r requirements.txt
