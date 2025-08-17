@@ -189,10 +189,19 @@ def get_sample(file_name: str):
     # A fix for path traversal vulenerability. 
     # An attacker may summon this endpoint with ../../etc/passwd and recover the password file of your PC (in linux) or access any other file on the PC
     if ".." in file_name:
-        raise HTTPException(status_code=404, detail=".. in the file name! Are you kidding me?") 
-    file_path = os.path.join(XTTS.speaker_folder, file_name)
-    if os.path.isfile(file_path):
-        return FileResponse(file_path, media_type="audio/wav")
+        raise HTTPException(status_code=404, detail=".. in the file name! Are you kidding me?")        
+    # Robust path traversal protection
+    try:
+        base = Path(XTTS.speaker_folder).resolve(strict=True)
+        target = (base / file_name).resolve()
+        # Ensure the resolved target is under the base directory
+        if not str(target).startswith(str(base) + os.sep):
+            raise HTTPException(status_code=404, detail="Invalid file path")
+    except Exception:
+        raise HTTPException(status_code=404, detail="Invalid file path")
+
+    if target.is_file():
+        return FileResponse(str(target), media_type="audio/wav")
     else:
         logger.error("File not found")
         raise HTTPException(status_code=404, detail="File not found")
@@ -240,10 +249,14 @@ async def tts_stream(request: Request, text: str = Query(), speaker_wav: str = Q
     
     if language.lower() not in supported_languages:
         raise HTTPException(status_code=400, detail="Language code sent is either unsupported or misspelled.")
+        
+    if not os.path.isfile(XTTS.get_speaker_wav(speaker_wav)):
+        raise HTTPException(status_code=400, detail="Speaker not found!")
 
     async def generator():
         # wait until the lock is available
         async with tts_lock:
+            
             chunks = XTTS.process_tts_to_file(
                 text=text,
                 speaker_name_or_path=speaker_wav,
@@ -271,6 +284,9 @@ async def tts_to_audio(request: SynthesisRequest, background_tasks: BackgroundTa
 
             speaker_wav = XTTS.get_speaker_wav(request.speaker_wav)
             language = request.language[0:2]
+            
+            if not os.path.isfile(speaker_wav):
+                raise HTTPException(status_code=400, detail="Speaker not found!")
 
             if stream.is_playing() and not STREAM_PLAY_SYNC:
                 stream.stop()
@@ -304,6 +320,10 @@ async def tts_to_audio(request: SynthesisRequest, background_tasks: BackgroundTa
                 raise HTTPException(status_code=400,
                                     detail="Language code sent is either unsupported or misspelled.")
 
+            
+            if not os.path.isfile(XTTS.get_speaker_wav(request.speaker_wav)):
+                raise HTTPException(status_code=400, detail="Speaker not found!")
+            
             # Generate an audio file using process_tts_to_file.
             output_file_path = XTTS.process_tts_to_file(
                 text=request.text,
@@ -337,6 +357,9 @@ async def tts_to_file(request: SynthesisFileRequest):
              raise HTTPException(status_code=400,
                                  detail="Language code sent is either unsupported or misspelled.")
 
+        if not os.path.isfile(XTTS.get_speaker_wav(request.speaker_wav)):
+            raise HTTPException(status_code=400, detail="Speaker not found!")
+        
         # Now use process_tts_to_file for saving the file.
         output_file = XTTS.process_tts_to_file(
             text=request.text,
