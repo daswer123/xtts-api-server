@@ -10,6 +10,7 @@ from TTS.tts.models.xtts import Xtts
 from pathlib import Path
 
 from xtts_api_server.modeldownloader import download_model,check_tts_version
+from xtts_api_server.voice_management import InvalidVoiceSampleError, filter_valid_voice_samples
 
 from loguru import logger
 from datetime import datetime
@@ -254,20 +255,64 @@ class TTSWrapper:
                 torch.cuda.empty_cache()
 
     # SPEAKER FUNCS
+    def get_wav_duration_seconds(self, speaker_wav):
+        waveform, sample_rate = torchaudio.load(speaker_wav)
+        if sample_rate <= 0 or waveform.numel() == 0 or not torch.isfinite(waveform).all():
+            raise ValueError("audio contains no valid samples")
+        return waveform.shape[-1] / sample_rate
+
     def get_or_create_latents(self, speaker_name, speaker_wav):
         if speaker_name not in self.latents_cache:
-            logger.info(f"creating latents for {speaker_name}: {speaker_wav}")
-            gpt_cond_latent, speaker_embedding = self.model.get_conditioning_latents(speaker_wav)
+            sample_paths = speaker_wav if isinstance(speaker_wav, list) else [speaker_wav]
+            valid_paths, rejected_paths = filter_valid_voice_samples(
+                sample_paths,
+                self.get_wav_duration_seconds,
+            )
+
+            for rejected_path, reason in rejected_paths:
+                logger.warning(
+                    f"Rejected XTTS speaker sample '{rejected_path}' for '{speaker_name}': {reason}"
+                )
+
+            if not valid_paths:
+                raise InvalidVoiceSampleError(
+                    f"Speaker '{speaker_name}' has no valid WAV samples."
+                )
+
+            valid_speaker_wav = valid_paths if isinstance(speaker_wav, list) else valid_paths[0]
+            logger.info(f"creating latents for {speaker_name}: {valid_speaker_wav}")
+            try:
+                gpt_cond_latent, speaker_embedding = self.model.get_conditioning_latents(valid_speaker_wav)
+            except RuntimeError as exc:
+                if "stack expects a non-empty TensorList" not in str(exc):
+                    raise
+                for sample_path in valid_paths:
+                    logger.warning(
+                        f"Rejected XTTS speaker sample '{sample_path}' for '{speaker_name}': "
+                        "XTTS could not extract a usable conditioning segment"
+                    )
+                raise InvalidVoiceSampleError(
+                    f"Speaker '{speaker_name}' has no XTTS-compatible WAV samples."
+                ) from exc
             self.latents_cache[speaker_name] = (gpt_cond_latent, speaker_embedding)
         return self.latents_cache[speaker_name]
 
     def create_latents_for_all(self):
         speakers_list = self._get_speakers()
+        created_count = 0
+        skipped_count = 0
 
         for speaker in speakers_list:
-            self.get_or_create_latents(speaker['speaker_name'],speaker['speaker_wav'])
+            try:
+                self.get_or_create_latents(speaker['speaker_name'],speaker['speaker_wav'])
+                created_count += 1
+            except InvalidVoiceSampleError as exc:
+                skipped_count += 1
+                logger.warning(f"Skipping XTTS speaker during startup: {exc}")
 
-        logger.info(f"Latents created for all {len(speakers_list)} speakers.")
+        logger.info(
+            f"Latents created for {created_count} speakers; skipped {skipped_count} invalid speakers."
+        )
 
     # DIRICTORIES FUNCS
     def create_directories(self):

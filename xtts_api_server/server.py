@@ -1,5 +1,5 @@
 from TTS.api import TTS
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Query
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Request, Query, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse,StreamingResponse
 
@@ -18,6 +18,7 @@ from uuid import uuid4
 from xtts_api_server.tts_funcs import TTSWrapper,supported_languages,InvalidSettingsError
 from xtts_api_server.RealtimeTTS import TextToAudioStream, CoquiEngine
 from xtts_api_server.modeldownloader import check_stream2sentence_version,install_deepspeed_based_on_python_version
+from xtts_api_server.voice_management import delete_flat_voice, flat_voice_path, normalize_voice_id
 
 # Default Folders , you can change them via API
 DEVICE = os.getenv('DEVICE',"cuda")
@@ -146,6 +147,20 @@ def get_speakers():
     speakers = XTTS.get_speakers()
     return speakers
 
+@app.get("/speakers_list_extended")
+def get_speakers_extended():
+    speakers = []
+    for speaker in XTTS._get_speakers():
+        voice_id = speaker['speaker_name']
+        can_delete = flat_voice_path(XTTS.speaker_folder, voice_id).is_file()
+        speakers.append({
+            **speaker,
+            "voice_id": voice_id,
+            "can_delete": can_delete,
+            "source": "uploaded_sample" if can_delete else "managed_directory",
+        })
+    return {"speakers": speakers, "count": len(speakers)}
+
 @app.get("/speakers")
 def get_speakers():
     speakers = XTTS.get_speakers_special()
@@ -202,6 +217,56 @@ def set_speaker_folder(speaker_req: SpeakerFolderRequest):
     except ValueError as e:
         logger.error(e)
         raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/upload_sample")
+async def upload_sample(
+    wavFile: UploadFile = File(...),
+    force: bool = Form(default=False),
+):
+    del force  # XTTS has historically replaced same-name flat samples.
+    if not wavFile.filename or not wavFile.filename.lower().endswith('.wav'):
+        raise HTTPException(status_code=400, detail="Only .wav files are supported")
+    try:
+        voice_id = normalize_voice_id(wavFile.filename)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    upload_dir = Path(XTTS.speaker_folder)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    file_path = flat_voice_path(upload_dir, voice_id)
+    content = await wavFile.read()
+    if not content:
+        raise HTTPException(status_code=400, detail="Uploaded WAV is empty")
+
+    replaced = file_path.exists()
+    temp_path = upload_dir / f".upload-{uuid4().hex}.wav"
+    try:
+        temp_path.write_bytes(content)
+        os.replace(temp_path, file_path)
+    finally:
+        if temp_path.exists():
+            temp_path.unlink()
+    XTTS.latents_cache.pop(voice_id, None)
+    return {"filename": file_path.name, "voice_id": voice_id, "replaced": replaced}
+
+
+@app.delete("/voices/{voice_id}")
+def delete_voice(voice_id: str):
+    try:
+        normalized = normalize_voice_id(voice_id)
+        removed = delete_flat_voice(XTTS.speaker_folder, normalized)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if removed is None:
+        raise HTTPException(status_code=404, detail=f"Uploaded voice '{normalized}' was not found")
+    XTTS.latents_cache.pop(normalized, None)
+    return {
+        "status": "deleted",
+        "voice_id": normalized,
+        "removed": [removed.name],
+        "cache_invalidated": True,
+    }
+
 
 @app.post("/switch_model")
 def switch_model(modelReq: ModelNameRequest):
